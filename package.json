@@ -1,0 +1,25 @@
+{
+  "name": "ciel-naissance",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host",
+    "check": "tsc --noEmit",
+    "stars": "node scripts/build-stars.mjs",
+    "deploy": "vite build && vercel deploy --prod"
+  },
+  "dependencies": {
+    "@fontsource/cormorant-garamond": "^5.3.0",
+    "astronomy-engine": "^2.1.19",
+    "gsap": "^3.15.1",
+    "three": "^0.187.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.187.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8"
+  }
+}
