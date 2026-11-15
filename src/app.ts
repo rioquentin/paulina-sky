@@ -414,7 +414,11 @@ export async function createApp() {
       // reprise d'une visite interrompue (rechargement, perte de contexte)
       try {
         const old = JSON.parse(sessionStorage.getItem(STORE) || "[]") as number[];
-        for (const k of old) {
+        // on ne reprend qu'une visite interrompue en cours de route :
+        // une visite terminée repart de zéro, sinon le lapin apparaîtrait d'emblée
+        const partial = Array.isArray(old) && old.length < total ? old : [];
+        if (!partial.length) sessionStorage.removeItem(STORE);
+        for (const k of partial) {
           if (k === seen.length && k < total) seen.push(k);
         }
         armed = true;
