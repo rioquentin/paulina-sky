@@ -251,9 +251,14 @@ export async function createApp() {
 
   function frame(now: number) {
     raf = requestAnimationFrame(frame);
-    const dt = Math.min(0.05, (now - last) / 1000 || 0.016);
     const rawDt = (now - last) / 1000;
     last = now;
+    // un écart négatif ou énorme (retour d'arrière-plan) ne doit jamais accélérer le temps
+    update(rawDt > 0 ? Math.min(0.05, rawDt) : 0.016, rawDt);
+  }
+
+  /** Avance d'un pas et dessine une image. Ne programme rien : une seule boucle existe. */
+  function update(dt: number, rawDt: number) {
     time += dt;
 
     const kp = 1 - Math.exp(-dt * 16), kt = 1 - Math.exp(-dt * 3.5);
@@ -390,7 +395,7 @@ export async function createApp() {
       startFinale();
     });
     dbg.appendChild(all);
-    (window as any).__ciel = { sky, fx, rabbit, seen, focus, frame, get mode() { return mode; }, get time() { return time; } };
+    (window as any).__ciel = { sky, fx, rabbit, seen, focus, step: (dt = 0.016) => update(dt, dt), get mode() { return mode; }, get time() { return time; } };
   }
 
   // quelques images dès maintenant : les shaders sont compilés avant le premier tap
