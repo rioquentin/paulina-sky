@@ -33,6 +33,20 @@ export class Finale {
     const parts = [".f-kicker", ".f-name", ".f-msg", ".f-sign", "#again"].map($);
     gsap.set(panel, { opacity: 0 });
     gsap.set(parts, { opacity: 0, y: 14 });
+    // le prénom s'écrit lettre à lettre
+    const nameEl = parts[1];
+    const name = nameEl.textContent ?? "";
+    nameEl.textContent = "";
+    const letters = Array.from(name).map((ch) => {
+      const sp = document.createElement("span");
+      sp.textContent = ch === " " ? " " : ch;
+      sp.style.display = "inline-block";
+      nameEl.appendChild(sp);
+      return sp;
+    });
+    nameEl.setAttribute("aria-label", name);
+    gsap.set(nameEl, { opacity: 1, y: 0 });
+    gsap.set(letters, { opacity: 0, y: 20, filter: "blur(7px)" });
 
     const tl = (this.tl = gsap.timeline());
     const SEG = 0.56, STEP = 0.6, START = 2.7;
@@ -102,12 +116,7 @@ export class Finale {
     tl.call(() => { panel.classList.add("on"); panel.setAttribute("aria-hidden", "false"); }, [], msg);
     tl.to(panel, { opacity: 1, duration: 1.6, ease: "sine.out" }, msg);
     tl.to(parts[0], { opacity: 1, y: 0, duration: 1.4, ease: "power2.out" }, msg + 0.2);
-    tl.fromTo(
-      parts[1],
-      { opacity: 0, y: 14, letterSpacing: "0.07em" },
-      { opacity: 1, y: 0, letterSpacing: "-0.005em", duration: 2.2, ease: "power3.out" },
-      msg + 0.7,
-    );
+    tl.to(letters, { opacity: 1, y: 0, filter: "blur(0px)", duration: reduced ? 0.8 : 1.5, ease: "power3.out", stagger: reduced ? 0 : Math.min(0.09, 0.8 / Math.max(1, letters.length)) }, msg + 0.7);
     tl.to(parts[2], { opacity: 1, y: 0, duration: 1.6, ease: "power2.out" }, msg + 1.9);
     tl.to(parts[3], { opacity: 1, y: 0, duration: 1.6, ease: "power2.out" }, msg + 2.8);
     tl.to(parts[4], { opacity: 1, y: 0, duration: 1.4, ease: "sine.out" }, msg + 4.2);
@@ -127,7 +136,12 @@ export class Finale {
       },
     });
     tl.to(panel, { opacity: 0, duration: 0.9, ease: "sine.out" }, 0);
-    tl.call(() => { panel.classList.remove("on"); panel.setAttribute("aria-hidden", "true"); }, [], 0.9);
+    tl.call(() => {
+      panel.classList.remove("on");
+      panel.setAttribute("aria-hidden", "true");
+      const nameEl = $(".f-name");
+      nameEl.textContent = nameEl.getAttribute("aria-label") ?? nameEl.textContent;
+    }, [], 0.9);
     tl.to(fx, { linesAlpha: 0, breathe: 0, duration: 1.4, ease: "sine.inOut" }, 0.2);
     tl.to(focus, { t: 0, duration: 2.6, ease: "power2.inOut" }, 0.3);
     tl.to(sky, { dim: 1, calm: this.c.reduced ? 0.35 : 1, duration: 2.6, ease: "sine.inOut" }, 0.3);

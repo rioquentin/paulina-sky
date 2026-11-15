@@ -41,6 +41,7 @@ export const content = {
     indice: "Certaines étoiles brillent un peu plus fort que les autres…",
     joyeux: "Joyeux anniversaire",
     revoir: "Revoir le ciel",
+    constellation: "le Lapin", // légende sous la constellation ("" pour l'enlever)
     paysage: "Tourne ton téléphone",
   },
 };

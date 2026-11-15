@@ -39,6 +39,7 @@ export async function createApp() {
   fx.rabbit = rabbit;
   fx.resetLines();
   fx.debug = debug;
+  fx.caption = content.ui.constellation;
   fx.reduced = reduced;
   fx.meteorsOn = false;
 

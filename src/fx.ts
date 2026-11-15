@@ -27,6 +27,9 @@ export class Fx {
   tailRing = 0;
   debug = false;
   labels: { dir: Vec3; text: string }[] = [];
+  /** Petite légende sous la constellation, façon atlas du ciel. */
+  caption = "";
+  private dust: { k: number; u: number; off: number; phase: number; sp: number; r: number }[] = [];
   meteorsOn = true;
   reduced = false;
 
@@ -53,6 +56,14 @@ export class Fx {
     this.earTwitch = 0;
     this.tailRing = 0;
     this.hearts.length = 0;
+    // poussière d'étoiles posée le long des traits
+    this.dust = [];
+    this.seg.forEach((_, k) => {
+      const n = 5 + Math.floor(Math.random() * 4);
+      for (let i = 0; i < n; i++) {
+        this.dust.push({ k, u: 0.06 + Math.random() * 0.88, off: (Math.random() - 0.5) * 13, phase: Math.random() * 6.28, sp: 1.2 + Math.random() * 2.2, r: 0.6 + Math.random() * 0.9 });
+      }
+    });
   }
 
   /** Fait naître un cœur près du lapin. */
@@ -141,6 +152,18 @@ export class Fx {
       g.addColorStop(1, `rgba(${col}, 0)`);
       ctx.fillStyle = g;
       ctx.beginPath(); ctx.arc(p.x, p.y, 26 + e * 22, 0, 6.283); ctx.fill();
+      // gerbe d'étincelles
+      for (let k = 0; k < 9; k++) {
+        const ang = (k / 9) * 6.283 + r.t0 * 3.7 + Math.sin(k * 12.9 + r.t0) * 0.3;
+        const reach = 16 + (Math.sin(k * 7.1 + r.t0 * 5.0) * 0.5 + 0.5) * 30;
+        const r1 = 9 + e * reach, r0 = r1 - 7 * (1 - t);
+        ctx.strokeStyle = `rgba(${col}, ${0.8 * (1 - t) * (1 - t)})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(p.x + Math.cos(ang) * r0, p.y + Math.sin(ang) * r0);
+        ctx.lineTo(p.x + Math.cos(ang) * r1, p.y + Math.sin(ang) * r1);
+        ctx.stroke();
+      }
       // deux anneaux fins
       for (const [delay, max] of [[0, 46], [0.16, 30]] as const) {
         const tt = Math.max(0, (t - delay) / (1 - delay));
@@ -268,6 +291,33 @@ export class Fx {
         ctx.beginPath(); ctx.arc(p.x, p.y, 16, 0, 6.283); ctx.fill();
       }
     });
+
+    // poussière d'étoiles : apparaît au passage de la lumière, puis scintille
+    for (const q of this.dust) {
+      const t = this.seg[q.k] ?? 0;
+      if (t < q.u) continue;
+      const [a, b] = rabbit.segments[q.k];
+      const A = pts[a], B = pts[b];
+      const dx = B.x - A.x, dy = B.y - A.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const x = A.x + dx * q.u + (-dy / len) * q.off, y = A.y + dy * q.u + (dx / len) * q.off;
+      const tw = 0.35 + 0.65 * Math.pow(0.5 + 0.5 * Math.sin(time * q.sp + q.phase), 2);
+      const fresh = Math.min(1, (t - q.u) * 6);
+      ctx.fillStyle = `rgba(255, 244, 222, ${0.75 * tw * fresh * alpha})`;
+      ctx.beginPath(); ctx.arc(x, y, q.r, 0, 6.283); ctx.fill();
+    }
+
+    // légende
+    if (this.caption && this.tailRing > 0.001) {
+      let bottom = -Infinity;
+      for (const p of pts) bottom = Math.max(bottom, p.y);
+      ctx.font = '500 11px "Cormorant Garamond", serif';
+      ctx.textAlign = "center";
+      (ctx as any).letterSpacing = "4.5px";
+      ctx.fillStyle = `rgba(${WARM}, ${0.62 * alpha * this.tailRing})`;
+      ctx.fillText(this.caption.toUpperCase(), c.x + 2, bottom + 34);
+      (ctx as any).letterSpacing = "0px";
+    }
 
     // l'œil
     if (this.tailRing > 0.001) {

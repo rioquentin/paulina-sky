@@ -59,6 +59,8 @@ const STAR_VERT = /* glsl */ `
   uniform float uMoonPower;
   varying vec3 vColor;
   varying float vAlpha;
+  varying float vSpike;
+  varying float vScale;
   void main() {
     float mag = aInfo.x, phase = aInfo.y, state = aInfo.z;
     float special = step(0.5, state);
@@ -100,17 +102,28 @@ const STAR_VERT = /* glsl */ `
 
     vColor = mix(aColor, vec3(1.0, 0.8, 0.52), lit * 0.75);
     vAlpha = alpha * twinkle;
-    gl_PointSize = core * 4.2 * uPx * sizeMul * uZoomSize * mix(1.0, twinkle, 0.35);
+    // aigrettes : les étoiles les plus brillantes, et celles du lapin
+    vSpike = max(smoothstep(1.7, 0.0, mag) * 0.85, special * mix(0.5 + 0.25 * pulse, 1.0, lit));
+    vScale = 1.0 + 1.5 * vSpike;
+    gl_PointSize = core * 4.2 * uPx * sizeMul * uZoomSize * mix(1.0, twinkle, 0.35) * vScale;
   }
 `;
 
 const STAR_FRAG = /* glsl */ `
   varying vec3 vColor;
   varying float vAlpha;
+  varying float vSpike;
+  varying float vScale;
   void main() {
-    float d = length(gl_PointCoord - 0.5) * 2.0;
+    vec2 uv = (gl_PointCoord - 0.5) * 2.0 * vScale;
+    float d = length(uv);
     float i = exp(-d * d * 16.0) + 0.16 * exp(-d * d * 3.5);
     i *= smoothstep(1.0, 0.55, d);
+    // croix de lumière fine, qui s'éteint vers le bord
+    vec2 a = abs(uv);
+    float cross = exp(-a.y * 11.0) * exp(-a.x * 1.9) + exp(-a.x * 11.0) * exp(-a.y * 1.9);
+    cross *= smoothstep(vScale, vScale * 0.45, max(a.x, a.y));
+    i += cross * 0.3 * vSpike;
     gl_FragColor = vec4(vColor * i * vAlpha, 1.0);
     #include <colorspace_fragment>
   }
@@ -150,7 +163,7 @@ const BG_FRAG = /* glsl */ `
     float angM = acos(clamp(dot(d, uMoon), -1.0, 1.0));
     mw *= 1.0 - uMoonPower * 0.55 * (1.0 - smoothstep(0.1, 0.9, angM));
     mw *= smoothstep(0.05, 0.4, alt) * uReveal * mix(0.55, 1.0, uDim);
-    col += vec3(0.30, 0.33, 0.50) * mw * 0.16;
+    col += vec3(0.30, 0.33, 0.50) * mw * 0.25;
 
     // halo de la Lune
     float glow = 0.30 * exp(-angM * 11.0) + 0.085 * exp(-angM * 2.8);
