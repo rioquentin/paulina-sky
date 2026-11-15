@@ -46,6 +46,9 @@ export async function createApp() {
 
   const card = new Card(reduced);
   const focus = { t: 0 };
+  /** Mise en scène de l'arrivée : zoom d'ouverture (1 = normal). */
+  const arrival = { zoom: 1 };
+  const restAlt = sky.view.alt;
   let time = 0;
   const finale = new Finale({ sky, fx, rabbit, focus, reduced, now: () => time });
 
@@ -276,7 +279,7 @@ export async function createApp() {
 
     // cadrage du final : zoom + recentrage sur le lapin, sans tourner le ciel
     const zoomTo = focusZoom();
-    sky.view.zoom = 1 + (zoomTo - 1) * focus.t;
+    sky.view.zoom = (1 + (zoomTo - 1) * focus.t) * arrival.zoom;
     sky.updateView();
     const [px, py] = sky.plane(rabbit.center);
     const fy = focusY();
@@ -325,7 +328,7 @@ export async function createApp() {
     }));
   }
   function focusZoom() {
-    const s0 = sky.scale / sky.view.zoom;
+    const s0 = (sky.scale / sky.view.zoom) * arrival.zoom;
     const portrait = sky.height > sky.width * 1.25;
     const want = portrait ? Math.min(sky.width * 0.37, sky.height * 0.215) : sky.height * 0.17;
     return clamp(want / (planeRadius * s0), 0.9, 2.4);
@@ -399,7 +402,7 @@ export async function createApp() {
       startFinale();
     });
     dbg.appendChild(all);
-    (window as any).__ciel = { sky, fx, rabbit, seen, focus, step: (dt = 0.016) => update(dt, dt), get mode() { return mode; }, get time() { return time; } };
+    (window as any).__ciel = { sky, fx, rabbit, seen, focus, arrival, step: (dt = 0.016) => update(dt, dt), get mode() { return mode; }, get time() { return time; } };
   }
 
   // quelques images dès maintenant : les shaders sont compilés avant le premier tap
@@ -414,7 +417,17 @@ export async function createApp() {
       if (gyro && !reduced) window.addEventListener("deviceorientation", onOrientation);
       $("#hud").classList.remove("is-hidden");
       sound.startPad();
-      gsap.to(sky, { reveal: 1, duration: reduced ? 1.5 : 6, ease: "power1.inOut" });
+      gsap.to(sky, { reveal: 1, duration: reduced ? 1.5 : 6.5, ease: "sine.inOut" });
+      if (!reduced) {
+        // le regard part de l'horizon et se lève vers le zénith, en reculant doucement
+        sky.view.alt = restAlt - 27;
+        arrival.zoom = 1.28;
+        gsap.to(sky.view, { alt: restAlt, duration: 7.5, ease: "power3.out" });
+        gsap.to(arrival, { zoom: 1, duration: 7.5, ease: "power3.out" });
+        // une gamme égrenée pendant que les étoiles s'allument, et une grande étoile filante
+        [0, 2, 3, 5, 7, 8, 10].forEach((n, i) => gsap.delayedCall(0.6 + i * 0.52, () => sound.chime(n, 0.28)));
+        gsap.delayedCall(3.4, () => fx.shoot());
+      }
       // reprise d'une visite interrompue (rechargement, perte de contexte)
       try {
         const old = JSON.parse(sessionStorage.getItem(STORE) || "[]") as number[];
@@ -425,13 +438,21 @@ export async function createApp() {
         for (const k of partial) {
           if (k === seen.length && k < total) seen.push(k);
         }
-        armed = true;
-        refresh();
         paintProgress();
       } catch { /* rien à reprendre */ }
-      gsap.delayedCall(reduced ? 1.5 : 4.5, () => {
+      // l'étoile à toucher ne s'embrase qu'une fois le ciel ouvert
+      armed = false;
+      refresh();
+      gsap.delayedCall(reduced ? 1.5 : 5.6, () => {
         lastFind = time;
         fx.meteorsOn = !reduced;
+        if (seen.length < total) {
+          armed = true;
+          refresh();
+          if (fx.target) fx.ring(fx.target, time);
+          sound.chime(9, 0.55);
+          sound.chime(12, 0.4, 0.14);
+        }
         if (seen.length === 0) $("#hint").classList.add("on");
         if (seen.length === total) startFinale();
       });

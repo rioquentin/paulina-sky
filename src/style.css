@@ -46,8 +46,8 @@ canvas { position: fixed; inset: 0; width: 100%; height: 100dvh; display: block;
 #fx { pointer-events: none; }
 
 /* ── Intro ─────────────────────────────────────────────── */
-#intro { padding: calc(var(--st) + 24px) 32px calc(var(--sb) + 24px); transition: opacity 1.8s ease, visibility 0s linear 1.8s; }
-#intro.is-leaving { opacity: 0; visibility: hidden; pointer-events: none; }
+#intro { padding: calc(var(--st) + 24px) 32px calc(var(--sb) + 24px); transition: opacity 2s ease, transform 2.2s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 2.2s; }
+#intro.is-leaving { opacity: 0; transform: scale(1.12); visibility: hidden; pointer-events: none; }
 
 .intro-stars { position: absolute; inset: 0; overflow: hidden; }
 .intro-stars i {
@@ -59,6 +59,26 @@ canvas { position: fixed; inset: 0; width: 100%; height: 100dvh; display: block;
   box-shadow: 0 0 calc(var(--s) * 2.5) rgba(200, 215, 255, 0.8);
   opacity: 0;
   animation: twinkle var(--d) ease-in-out var(--w) infinite;
+}
+/* une étoile filante traverse l'écran d'accueil de temps en temps */
+.intro-stars::after {
+  content: "";
+  position: absolute;
+  top: 14%;
+  left: -35%;
+  width: 130px;
+  height: 1.5px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(226, 234, 255, 0.95));
+  box-shadow: 0 0 8px rgba(200, 215, 255, 0.6);
+  opacity: 0;
+  animation: shoot 9s ease-in 2.2s infinite;
+}
+@keyframes shoot {
+  0% { opacity: 0; transform: translate(0, 0) rotate(24deg); }
+  2% { opacity: 1; }
+  10% { opacity: 0; transform: translate(150vw, 67vw) rotate(24deg); }
+  100% { opacity: 0; transform: translate(150vw, 67vw) rotate(24deg); }
 }
 @keyframes twinkle {
   0%, 100% { opacity: calc(var(--o) * 0.35); transform: scale(0.85); }
@@ -76,10 +96,10 @@ canvas { position: fixed; inset: 0; width: 100%; height: 100dvh; display: block;
   letter-spacing: 0.005em;
   text-wrap: balance;
 }
-.intro-line span { display: block; opacity: 0; transform: translateY(8px); transition: opacity 1.8s ease, transform 2.2s var(--ease-out); }
+.intro-line span { display: block; opacity: 0; transform: translateY(10px); filter: blur(7px); transition: opacity 2s ease, transform 2.4s var(--ease-out), filter 2.2s ease; }
 .intro-line span:nth-child(2) { transition-delay: 0.9s; }
 #intro.is-ready .intro-orn { opacity: 0.9; }
-#intro.is-ready .intro-line span { opacity: 1; transform: none; }
+#intro.is-ready .intro-line span { opacity: 1; transform: none; filter: blur(0); }
 
 #start {
   position: absolute;
@@ -325,5 +345,6 @@ canvas { position: fixed; inset: 0; width: 100%; height: 100dvh; display: block;
 
 @media (prefers-reduced-motion: reduce) {
   .intro-stars i, #start::before, #rotate svg { animation: none; opacity: var(--o, 1); }
+  .intro-stars::after { animation: none; }
   #card { transition-duration: 0.2s; }
 }

@@ -96,7 +96,14 @@ const STAR_VERT = /* glsl */ `
     alpha *= mix(1.0, smoothstep(0.02, 0.05, ang), step(0.01, uMoonPower));
 
     // apparition : les plus brillantes d'abord
-    alpha *= smoothstep(0.0, 1.0, (mix(-2.5, 8.0, uReveal) - mag) * 0.9);
+    // apparition : une vague qui part du centre du regard, les plus brillantes d'abord,
+    // et chaque étoile naît avec un petit éclat
+    vec3 vv = uView * position;
+    float order = clamp(0.55 * acos(clamp(vv.z, -1.0, 1.0)) / 1.7 + 0.45 * (mag + 1.5) / 7.5, 0.0, 1.0);
+    float prog = uReveal * 1.14 - order;
+    float born = smoothstep(0.0, 0.05, prog);
+    float flare = born * exp(-max(prog, 0.0) * 16.0) * step(uReveal, 0.999);
+    alpha *= born * (1.0 + 1.6 * flare);
 
     alpha *= mix(uDim, 1.0, special);
 
@@ -105,7 +112,7 @@ const STAR_VERT = /* glsl */ `
     // aigrettes : les étoiles les plus brillantes, et celles du lapin
     vSpike = max(smoothstep(1.7, 0.0, mag) * 0.85, special * mix(0.85 + 0.15 * pulse, 0.8, lit));
     vScale = 1.0 + 1.5 * vSpike;
-    gl_PointSize = core * 4.2 * uPx * sizeMul * uZoomSize * mix(1.0, twinkle, 0.35) * vScale;
+    gl_PointSize = core * 4.2 * uPx * sizeMul * uZoomSize * mix(1.0, twinkle, 0.35) * vScale * (1.0 + 1.2 * flare);
   }
 `;
 
@@ -163,8 +170,14 @@ const BG_FRAG = /* glsl */ `
     }
     float angM = acos(clamp(dot(d, uMoon), -1.0, 1.0));
     mw *= 1.0 - uMoonPower * 0.55 * (1.0 - smoothstep(0.1, 0.9, angM));
-    mw *= smoothstep(0.05, 0.4, alt) * uReveal * mix(0.55, 1.0, uDim);
-    col += vec3(0.30, 0.33, 0.50) * mw * 0.25;
+    mw *= smoothstep(0.05, 0.4, alt) * smoothstep(0.4, 1.0, uReveal) * mix(0.55, 1.0, uDim);
+    // la Voie lactée hésite entre le bleu et le rose
+    float tint = vnoise(g * 2.1 + 4.0);
+    col += mix(vec3(0.26, 0.33, 0.56), vec3(0.52, 0.30, 0.50), tint) * mw * 0.3;
+    // voiles de couleur très légers dans le reste du ciel
+    float veil = vnoise(d * 1.7 + 9.0) * vnoise(d * 3.1 - 2.0);
+    col += mix(vec3(0.10, 0.06, 0.20), vec3(0.04, 0.10, 0.18), tint) * smoothstep(0.18, 0.6, veil) * 0.22
+      * smoothstep(0.3, 1.0, uReveal) * smoothstep(0.0, 0.35, alt) * mix(0.5, 1.0, uDim);
 
     // halo de la Lune
     float glow = 0.30 * exp(-angM * 11.0) + 0.085 * exp(-angM * 2.8);
@@ -176,6 +189,10 @@ const BG_FRAG = /* glsl */ `
     float hill = 0.034 + 0.026 * sin(az * 3.0 + 1.3) + 0.012 * sin(az * 7.3 + 0.4) + 0.006 * sin(az * 17.0);
     vec3 ground = mix(vec3(0.040, 0.030, 0.072), vec3(0.020, 0.016, 0.040), smoothstep(0.02, -0.35, alt));
     col = mix(col, ground, smoothstep(hill + 0.006, hill - 0.004, alt));
+
+    // vignette : les bords s'assombrissent un peu, le regard va au centre
+    vec2 q = gl_FragCoord.xy / uRes - 0.5;
+    col *= 1.0 - 0.5 * dot(q, q);
 
     // tramage contre les bandes dans les dégradés sombres
     float n = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);

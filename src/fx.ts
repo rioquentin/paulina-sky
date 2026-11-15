@@ -27,6 +27,7 @@ export class Fx {
   private motes: Mote[] = [];
   private bursts: Burst[] = [];
   private lastTrail = { x: -99, y: -99 };
+  private force = false;
   /** Appelé au départ de chaque étoile filante (pour le son). */
   onMeteor: ((big: boolean) => void) | null = null;
   private parts: Part[] | null = null;
@@ -102,6 +103,11 @@ export class Fx {
     this.earG = this.blink = this.tailWag = this.hop = 0;
     this.hearts.length = 0;
     this.sparks.length = 0;
+  }
+
+  /** Fait passer une grande étoile filante tout de suite. */
+  shoot() {
+    this.force = true;
   }
 
   /** Quelques étincelles sous le doigt quand on fait glisser le ciel. */
@@ -346,11 +352,12 @@ export class Fx {
     }
 
     // étoiles filantes
-    if (this.meteorsOn && time > this.nextMeteor) {
+    if ((this.meteorsOn && time > this.nextMeteor) || this.force) {
       this.nextMeteor = time + 8 + Math.random() * 12;
       const fromLeft = Math.random() < 0.5;
       const ang = Math.PI / 2 + (fromLeft ? -1 : 1) * (0.5 + Math.random() * 0.55);
-      const big = Math.random() < 0.14;
+      const big = this.force || Math.random() < 0.14;
+      this.force = false;
       const life = (big ? 1.25 : 0.75) + Math.random() * 0.35;
       this.meteors.push({
         x0: w * (fromLeft ? 0.02 + Math.random() * 0.45 : 0.53 + Math.random() * 0.45),
