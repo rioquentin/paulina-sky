@@ -51,6 +51,12 @@ export class Fx {
   hop = 0;
 
   caption = "";
+  /** L'étoile à toucher : elle brille très fort et appelle le doigt. */
+  target: Vec3 | null = null;
+  targetSince = 0;
+  /** Affiche la forme du lapin en debug (?debug=lapin). */
+  debugShape = false;
+  private flights: { a: Vec3; b: Vec3; t0: number; dur: number; done: () => void }[] = [];
   debug = false;
   labels: { dir: Vec3; text: string }[] = [];
   meteorsOn = true;
@@ -86,6 +92,65 @@ export class Fx {
     this.earG = this.blink = this.tailWag = this.hop = 0;
     this.hearts.length = 0;
     this.sparks.length = 0;
+  }
+
+  /** Une lumière file d'une étoile à la suivante, puis l'allume. */
+  fly(a: Vec3, b: Vec3, time: number, done: () => void) {
+    if (this.reduced) return done();
+    this.flights.push({ a, b, t0: time, dur: 0.95, done });
+  }
+
+  private drawBeacon(time: number) {
+    const { ctx, sky } = this;
+    if (!this.target) return;
+    const p = sky.project(this.target);
+    const age = time - this.targetSince;
+    const appear = Math.min(1, age / 0.9);
+    const pulse = 0.5 + 0.5 * Math.sin(time * 2.3);
+    // halo
+    const R = 46 + 14 * pulse;
+    const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, R);
+    g.addColorStop(0, `rgba(255, 246, 226, ${0.34 * appear * (0.7 + 0.3 * pulse)})`);
+    g.addColorStop(0.3, `rgba(${WARM}, ${0.13 * appear})`);
+    g.addColorStop(1, `rgba(${WARM}, 0)`);
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, TAU); ctx.fill();
+    // grands rayons en croix, petits rayons en diagonale
+    for (let k = 0; k < 8; k++) {
+      const ang = (k / 8) * TAU;
+      const len = (k % 2 ? 16 : 40) + (k % 2 ? 5 : 16) * pulse;
+      const ex = p.x + Math.cos(ang) * len * appear, ey = p.y + Math.sin(ang) * len * appear;
+      const lg = ctx.createLinearGradient(p.x, p.y, ex, ey);
+      lg.addColorStop(0, `rgba(255, 250, 238, ${0.85 * appear})`);
+      lg.addColorStop(1, "rgba(255, 250, 238, 0)");
+      ctx.strokeStyle = lg;
+      ctx.lineWidth = k % 2 ? 0.8 : 1.2;
+      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(ex, ey); ctx.stroke();
+    }
+    // une onde douce qui s'élargit, comme un appel
+    if (!this.reduced) {
+      const ph = (age % 2.6) / 2.6;
+      ctx.strokeStyle = `rgba(${WARM}, ${0.4 * (1 - ph) * (1 - ph) * appear})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(p.x, p.y, 9 + ph * 40, 0, TAU); ctx.stroke();
+    }
+  }
+
+  private drawFlights(time: number, dt: number) {
+    const { sky } = this;
+    for (const fl of this.flights.slice()) {
+      const t = (time - fl.t0) / fl.dur;
+      if (t >= 1) {
+        this.flights.splice(this.flights.indexOf(fl), 1);
+        fl.done();
+        continue;
+      }
+      const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      const a = sky.project(fl.a), b = sky.project(fl.b);
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const bow = Math.sin(Math.PI * e) * 0.16;
+      this.glint(a.x + dx * e - dy * bow, a.y + dy * e + dx * bow, 12, 1, time, dt, 3);
+    }
   }
 
   /** Fait naître un cœur près du lapin. */
@@ -130,6 +195,8 @@ export class Fx {
 
     this.drawMeteors(time, dt, w, h);
     this.drawRabbit(time, dt);
+    this.drawBeacon(time);
+    this.drawFlights(time, dt);
     this.drawRings(time);
     this.drawHearts(time, dt);
 
@@ -141,7 +208,7 @@ export class Fx {
         const p = sky.project(l.dir);
         if (p.visible) ctx.fillText(l.text, p.x + 6, p.y + 3);
       }
-      if (this.rabbit) {
+      if (this.rabbit && this.debugShape) {
         ctx.strokeStyle = "rgba(120,255,170,0.5)";
         ctx.fillStyle = "rgba(120,255,170,0.9)";
         ctx.lineWidth = 1;
@@ -297,7 +364,7 @@ export class Fx {
       const e = t < 1 ? (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2) : 1; // ease-in-out-cubic
       ctx.save();
       if (part.pivot) {
-        const ang = part.kind === "ear" ? this.earG * 0.14 : this.tailWag * 0.2;
+        const ang = (part.kind === "ear" ? this.earG : this.tailWag) * (part.amp ?? 0.1);
         ctx.translate(part.pivot[0], part.pivot[1]);
         ctx.rotate(ang);
         ctx.translate(-part.pivot[0], -part.pivot[1]);

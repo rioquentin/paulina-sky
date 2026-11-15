@@ -33,12 +33,12 @@ export async function createApp() {
     console.warn(`Le lapin accepte 8 à 12 messages (${content.messages.length} fournis).`);
   }
   const rabbit = findRabbit(sky, total);
-  rabbit.stars.forEach((s) => sky.setState(s, 1));
 
   const fx = new Fx($("#fx") as HTMLCanvasElement, sky);
   fx.rabbit = rabbit;
   fx.resetLines();
   fx.debug = debug;
+  fx.debugShape = params.get("debug") === "lapin";
   fx.caption = content.ui.constellation;
   fx.reduced = reduced;
   fx.meteorsOn = false;
@@ -51,6 +51,31 @@ export async function createApp() {
   let mode: "intro" | "sky" | "finale" = "intro";
   const seen: number[] = []; // dans l'ordre de découverte
   let lastFind = 0;
+  // Une seule étoile à la fois : la cible brille très fort, les suivantes restent des étoiles ordinaires.
+  let armed = true; // la prochaine étoile est-elle allumée ?
+  let flying = false;
+  const refresh = () => {
+    rabbit.stars.forEach((s, k) => sky.setState(s, k < seen.length ? 2 : k === seen.length && armed ? 1 : 0));
+    const next = armed && seen.length < total ? sky.dir(rabbit.stars[seen.length]) : null;
+    if (next && !fx.target) fx.targetSince = time;
+    if (next && fx.target && (next[0] !== fx.target[0] || next[1] !== fx.target[1])) fx.targetSince = time;
+    fx.target = next;
+  };
+  /** Une lumière part de la dernière étoile vue et va allumer la suivante. */
+  const revealNext = () => {
+    if (armed || flying || mode !== "sky" || seen.length === 0 || seen.length >= total) return;
+    flying = true;
+    const to = sky.dir(rabbit.stars[seen.length]);
+    fx.fly(sky.dir(rabbit.stars[seen.length - 1]), to, time, () => {
+      flying = false;
+      armed = true;
+      lastFind = time;
+      refresh();
+      fx.ring(to, time);
+      sound.chime(Math.min(13, seen.length + 3), 0.45);
+    });
+  };
+  refresh();
 
   // ── HUD ──────────────────────────────────────────────
   const progress = $("#progress");
@@ -96,7 +121,8 @@ export async function createApp() {
     if (isNew) {
       seen.push(k);
       lastFind = time;
-      sky.setState(star, 2);
+      armed = false;
+      refresh();
       paintProgress();
       save();
     }
@@ -116,6 +142,7 @@ export async function createApp() {
 
   card.onClose = () => {
     if (mode === "sky" && seen.length === total) startFinale();
+    else revealNext();
   };
 
   function startFinale() {
@@ -128,15 +155,18 @@ export async function createApp() {
   $("#again").addEventListener("click", () => {
     if (mode !== "finale") return;
     seen.length = 0;
+    armed = false;
     save();
     finale.reset(() => {
       mode = "sky";
+      armed = true;
+      refresh();
       fx.meteorsOn = !reduced;
       lastFind = time;
       $("#hint").style.opacity = "";
       $("#hint").classList.add("on");
     });
-    rabbit.stars.forEach((s) => sky.setState(s, 1));
+    refresh();
     paintProgress();
   });
 
@@ -181,6 +211,8 @@ export async function createApp() {
   function hitStar(x: number, y: number): number {
     let best = -1, bd = 38; // rayon de tap généreux (cible ≥ 44 pt)
     rabbit.stars.forEach((s, k) => {
+      // seules les étoiles déjà vues et la cible du moment répondent au doigt
+      if (k > seen.length || (k === seen.length && !armed)) return;
       const p = sky.project(sky.dir(s));
       const d = Math.hypot(p.x - x, p.y - y);
       if (d < bd) { bd = d; best = k; }
@@ -246,7 +278,7 @@ export async function createApp() {
     fx.draw(time, dt);
 
     // un petit signe si elle cherche depuis longtemps
-    if (mode === "sky" && !card.isOpen && seen.length < total && time - lastFind > 28) {
+    if (mode === "sky" && !card.isOpen && armed && seen.length < total && time - lastFind > 28) {
       lastFind = time;
       const k = rabbit.stars.findIndex((_, i) => !seen.includes(i));
       if (k >= 0) fx.ring(sky.dir(rabbit.stars[k]), time, false);
@@ -350,10 +382,10 @@ export async function createApp() {
     all.addEventListener("click", () => {
       if (mode !== "sky") return;
       card.close(true);
-      rabbit.stars.forEach((s, k) => {
+      rabbit.stars.forEach((_, k) => {
         if (!seen.includes(k)) seen.push(k);
-        sky.setState(s, 2);
       });
+      refresh();
       paintProgress();
       startFinale();
     });
@@ -378,11 +410,10 @@ export async function createApp() {
       try {
         const old = JSON.parse(sessionStorage.getItem(STORE) || "[]") as number[];
         for (const k of old) {
-          if (Number.isInteger(k) && k >= 0 && k < total && !seen.includes(k)) {
-            seen.push(k);
-            sky.setState(rabbit.stars[k], 2);
-          }
+          if (k === seen.length && k < total) seen.push(k);
         }
+        armed = true;
+        refresh();
         paintProgress();
       } catch { /* rien à reprendre */ }
       gsap.delayedCall(reduced ? 1.5 : 4.5, () => {

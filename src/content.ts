@@ -38,7 +38,7 @@ export const content = {
   // Textes d'interface (modifiables aussi).
   ui: {
     commencer: "Toucher pour commencer",
-    indice: "Certaines étoiles brillent un peu plus fort que les autres…",
+    indice: "Une étoile brille plus fort que les autres…",
     joyeux: "Joyeux anniversaire",
     revoir: "Revoir le ciel",
     constellation: "le Lapin", // légende sous la constellation ("" pour l'enlever)

@@ -32,18 +32,18 @@ export interface Rabbit {
 function template(n: number) {
   // points pris sur l'icône (voir figure.ts), ramenés au repère du gabarit
   const pts: Record<string, P> = {
-    museau: [0.833, -0.1],
-    front: [0.383, 0.412],
-    oreilleG: [0.5, 0.833],
-    nuque: [0.092, 0.175],
-    oreilleD: [-0.142, 0.642],
-    echine: [-0.15, 0.117],
-    dos: [-0.342, -0.017],
-    queue: [-0.583, -0.167],
-    patteArr: [-0.383, -0.667],
-    ventre: [0.083, -0.75],
-    patteAv: [0.5, -0.75],
-    gorge: [0.392, -0.45],
+    museau: [0.742, -0.025],
+    front: [0.425, 0.253],
+    oreilleG: [0.283, 0.754],
+    nuque: [0.192, 0.108],
+    oreilleD: [-0.033, 0.621],
+    echine: [-0.133, 0.104],
+    dos: [-0.446, 0.0],
+    queue: [-0.675, -0.354],
+    patteArr: [-0.333, -0.733],
+    ventre: [0.125, -0.771],
+    patteAv: [0.55, -0.75],
+    gorge: [0.433, -0.35],
   };
   // de 8 à 12 points selon le nombre de messages
   const order = ["museau", "front", "oreilleG", "nuque", "oreilleD", "echine", "dos", "queue", "patteArr", "ventre", "patteAv", "gorge"];

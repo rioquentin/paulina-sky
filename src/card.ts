@@ -16,7 +16,7 @@ export class Card {
       active = true;
       startY = e.clientY;
       drag = 0;
-      this.el.setPointerCapture(e.pointerId);
+      try { this.el.setPointerCapture(e.pointerId); } catch { /* pointeur déjà relâché */ }
       this.el.classList.add("dragging");
     });
     this.el.addEventListener("pointermove", (e) => {
