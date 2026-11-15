@@ -100,7 +100,7 @@ const STAR_VERT = /* glsl */ `
 
     alpha *= mix(uDim, 1.0, special);
 
-    vColor = mix(aColor, vec3(1.0, 0.8, 0.52), lit * 0.75);
+    vColor = mix(aColor, vec3(1.0, 0.62, 0.79), special * 0.9);
     vAlpha = alpha * twinkle;
     // aigrettes : les étoiles les plus brillantes, et celles du lapin
     vSpike = max(smoothstep(1.7, 0.0, mag) * 0.85, special * mix(0.85 + 0.15 * pulse, 0.8, lit));

@@ -11,6 +11,7 @@ interface Heart { x: number; y: number; vy: number; sway: number; phase: number;
 interface Spark { x: number; y: number; vx: number; vy: number; t0: number; life: number; r: number }
 
 const WARM = "255, 232, 196";
+const PINK = "255, 190, 216"; // rose pastel des étoiles à toucher
 const TAU = Math.PI * 2;
 
 export class Fx {
@@ -110,9 +111,9 @@ export class Fx {
     // halo
     const R = 46 + 14 * pulse;
     const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, R);
-    g.addColorStop(0, `rgba(255, 246, 226, ${0.34 * appear * (0.7 + 0.3 * pulse)})`);
-    g.addColorStop(0.3, `rgba(${WARM}, ${0.13 * appear})`);
-    g.addColorStop(1, `rgba(${WARM}, 0)`);
+    g.addColorStop(0, `rgba(255, 222, 236, ${0.34 * appear * (0.7 + 0.3 * pulse)})`);
+    g.addColorStop(0.3, `rgba(${PINK}, ${0.13 * appear})`);
+    g.addColorStop(1, `rgba(${PINK}, 0)`);
     ctx.fillStyle = g;
     ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, TAU); ctx.fill();
     // grands rayons en croix, petits rayons en diagonale
@@ -121,8 +122,8 @@ export class Fx {
       const len = (k % 2 ? 16 : 40) + (k % 2 ? 5 : 16) * pulse;
       const ex = p.x + Math.cos(ang) * len * appear, ey = p.y + Math.sin(ang) * len * appear;
       const lg = ctx.createLinearGradient(p.x, p.y, ex, ey);
-      lg.addColorStop(0, `rgba(255, 250, 238, ${0.85 * appear})`);
-      lg.addColorStop(1, "rgba(255, 250, 238, 0)");
+      lg.addColorStop(0, `rgba(255, 228, 240, ${0.85 * appear})`);
+      lg.addColorStop(1, "rgba(255, 228, 240, 0)");
       ctx.strokeStyle = lg;
       ctx.lineWidth = k % 2 ? 0.8 : 1.2;
       ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(ex, ey); ctx.stroke();
@@ -130,7 +131,7 @@ export class Fx {
     // une onde douce qui s'élargit, comme un appel
     if (!this.reduced) {
       const ph = (age % 2.6) / 2.6;
-      ctx.strokeStyle = `rgba(${WARM}, ${0.4 * (1 - ph) * (1 - ph) * appear})`;
+      ctx.strokeStyle = `rgba(${PINK}, ${0.4 * (1 - ph) * (1 - ph) * appear})`;
       ctx.lineWidth = 1;
       ctx.beginPath(); ctx.arc(p.x, p.y, 9 + ph * 40, 0, TAU); ctx.stroke();
     }
@@ -232,7 +233,7 @@ export class Fx {
       const t = (time - r.t0) / 1.4;
       const p = sky.project(r.dir);
       const e = 1 - Math.pow(1 - t, 3);
-      const col = r.warm ? WARM : "214, 226, 255";
+      const col = r.warm ? PINK : "214, 226, 255";
       const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 26 + e * 22);
       g.addColorStop(0, `rgba(${col}, ${0.5 * (1 - t) * (1 - t)})`);
       g.addColorStop(1, `rgba(${col}, 0)`);
