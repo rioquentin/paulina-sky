@@ -6,7 +6,9 @@ import type { Vec3 } from "./astro";
 import { apply, buildParts, placeOn, toIcon, EYE, GROUND, HEART, type Part } from "./figure";
 
 interface Ring { dir: Vec3; t0: number; warm: boolean }
-interface Meteor { x: number; y: number; vx: number; vy: number; t0: number; life: number; len: number }
+interface Meteor { x0: number; y0: number; ux: number; uy: number; dist: number; t0: number; life: number; len: number; w: number; big: boolean }
+interface Mote { x: number; y: number; vx: number; vy: number; phase: number; sp: number; r: number }
+interface Burst { x: number; y: number; t0: number }
 interface Heart { x: number; y: number; vy: number; sway: number; phase: number; size: number; t0: number; life: number; rot: number }
 interface Spark { x: number; y: number; vx: number; vy: number; t0: number; life: number; r: number }
 
@@ -22,6 +24,11 @@ export class Fx {
   private hearts: Heart[] = [];
   private sparks: Spark[] = [];
   private nextMeteor = 6;
+  private motes: Mote[] = [];
+  private bursts: Burst[] = [];
+  private lastTrail = { x: -99, y: -99 };
+  /** Appelé au départ de chaque étoile filante (pour le son). */
+  onMeteor: ((big: boolean) => void) | null = null;
   private parts: Part[] | null = null;
   private anchors: [number, number][] = [];
   private sx = new Float32Array(512);
@@ -95,6 +102,27 @@ export class Fx {
     this.earG = this.blink = this.tailWag = this.hop = 0;
     this.hearts.length = 0;
     this.sparks.length = 0;
+  }
+
+  /** Quelques étincelles sous le doigt quand on fait glisser le ciel. */
+  trail(x: number, y: number, time: number) {
+    if (this.reduced) return;
+    if (Math.hypot(x - this.lastTrail.x, y - this.lastTrail.y) < 7) return;
+    this.lastTrail = { x, y };
+    for (let i = 0; i < 2; i++) {
+      const a = Math.random() * TAU, v = 4 + Math.random() * 16;
+      this.sparks.push({ x: x + (Math.random() - 0.5) * 10, y: y + (Math.random() - 0.5) * 10, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 6, t0: time, life: 0.6 + Math.random() * 0.9, r: 0.5 + Math.random() * 0.9 });
+    }
+  }
+
+  /** Un petit scintillement là où l'on touche le ciel vide. */
+  twinkle(x: number, y: number, time: number) {
+    this.bursts.push({ x, y, t0: time });
+    if (this.reduced) return;
+    for (let i = 0; i < 6; i++) {
+      const a = Math.random() * TAU, v = 14 + Math.random() * 30;
+      this.sparks.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t0: time, life: 0.4 + Math.random() * 0.7, r: 0.5 + Math.random() * 0.7 });
+    }
   }
 
   /** Une lumière file d'une étoile à la suivante, puis l'allume. */
@@ -278,40 +306,117 @@ export class Fx {
 
   private drawMeteors(time: number, dt: number, w: number, h: number) {
     const { ctx } = this;
+
+    // poussière d'étoiles qui flotte très lentement
+    if (!this.reduced) {
+      if (!this.motes.length) {
+        for (let i = 0; i < 28; i++) {
+          this.motes.push({ x: Math.random(), y: Math.random(), vx: -2 - Math.random() * 5, vy: -3 - Math.random() * 6, phase: Math.random() * TAU, sp: 0.5 + Math.random() * 1.3, r: 0.5 + Math.random() * 0.9 });
+        }
+      }
+      const vis = this.sky.reveal * (0.45 + 0.55 * this.sky.dim);
+      for (const m of this.motes) {
+        m.x += ((m.vx + Math.sin(time * 0.4 + m.phase) * 3) * dt) / w;
+        m.y += (m.vy * dt) / h;
+        if (m.y < -0.02) { m.y = 1.02; m.x = Math.random(); }
+        if (m.x < -0.02) m.x = 1.02;
+        const tw = Math.pow(0.5 + 0.5 * Math.sin(time * m.sp + m.phase), 3);
+        if (tw < 0.02) continue;
+        ctx.fillStyle = `rgba(226, 232, 255, ${0.5 * tw * vis})`;
+        ctx.beginPath(); ctx.arc(m.x * w, m.y * h, m.r, 0, TAU); ctx.fill();
+      }
+    }
+
+    // scintillements au toucher : une petite étoile à quatre branches
+    this.bursts = this.bursts.filter((q) => time - q.t0 < 0.7);
+    for (const q of this.bursts) {
+      const t = (time - q.t0) / 0.7;
+      const e = 1 - Math.pow(1 - t, 3);
+      const al = (1 - t) * (1 - t);
+      for (let k = 0; k < 4; k++) {
+        const ang = (k / 4) * TAU + 0.4;
+        const len = (k % 2 ? 7 : 13) * (0.4 + 0.6 * e);
+        const lg = ctx.createLinearGradient(q.x, q.y, q.x + Math.cos(ang) * len, q.y + Math.sin(ang) * len);
+        lg.addColorStop(0, `rgba(240, 244, 255, ${0.9 * al})`);
+        lg.addColorStop(1, "rgba(240, 244, 255, 0)");
+        ctx.strokeStyle = lg;
+        ctx.lineWidth = 1.1;
+        ctx.beginPath(); ctx.moveTo(q.x - Math.cos(ang) * len, q.y - Math.sin(ang) * len); ctx.lineTo(q.x + Math.cos(ang) * len, q.y + Math.sin(ang) * len); ctx.stroke();
+      }
+    }
+
+    // étoiles filantes
     if (this.meteorsOn && time > this.nextMeteor) {
       this.nextMeteor = time + 8 + Math.random() * 12;
       const fromLeft = Math.random() < 0.5;
-      const ang = (fromLeft ? 1 : -1) * (0.35 + Math.random() * 0.5) + Math.PI / 2;
-      const speed = 620 + Math.random() * 380;
+      const ang = Math.PI / 2 + (fromLeft ? -1 : 1) * (0.5 + Math.random() * 0.55);
+      const big = Math.random() < 0.14;
+      const life = (big ? 1.25 : 0.75) + Math.random() * 0.35;
       this.meteors.push({
-        x: w * (fromLeft ? 0.05 + Math.random() * 0.45 : 0.5 + Math.random() * 0.45),
-        y: h * (0.06 + Math.random() * 0.34),
-        vx: Math.cos(ang) * speed,
-        vy: Math.sin(ang) * speed,
+        x0: w * (fromLeft ? 0.02 + Math.random() * 0.45 : 0.53 + Math.random() * 0.45),
+        y0: h * (0.04 + Math.random() * 0.3),
+        ux: Math.cos(ang),
+        uy: Math.sin(ang),
+        dist: Math.min(w, h) * (big ? 1.05 : 0.6 + Math.random() * 0.3),
         t0: time,
-        life: 0.55 + Math.random() * 0.35,
-        len: 90 + Math.random() * 90,
+        life,
+        len: (big ? 290 : 160) + Math.random() * 110,
+        w: big ? 4.2 : 2.3 + Math.random() * 1.0,
+        big,
       });
+      this.onMeteor?.(big);
     }
     this.meteors = this.meteors.filter((m) => time - m.t0 < m.life);
     for (const m of this.meteors) {
       const t = (time - m.t0) / m.life;
-      m.x += m.vx * dt;
-      m.y += m.vy * dt;
-      const sp = Math.hypot(m.vx, m.vy);
-      const ux = m.vx / sp, uy = m.vy / sp;
-      const a = Math.sin(Math.PI * Math.min(1, t * 1.15)) * 0.85;
-      const len = m.len * Math.min(1, t * 4);
-      const tx = m.x - ux * len, ty = m.y - uy * len;
-      const g = ctx.createLinearGradient(m.x, m.y, tx, ty);
-      g.addColorStop(0, `rgba(240, 244, 255, ${a})`);
-      g.addColorStop(0.25, `rgba(200, 214, 255, ${a * 0.4})`);
-      g.addColorStop(1, "rgba(200, 214, 255, 0)");
-      ctx.strokeStyle = g;
-      ctx.lineWidth = 1.4;
-      ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(tx, ty); ctx.stroke();
-      ctx.fillStyle = `rgba(255, 255, 255, ${a})`;
-      ctx.beginPath(); ctx.arc(m.x, m.y, 1.3, 0, TAU); ctx.fill();
+      // elle part vite puis ralentit en s'éteignant
+      const e = 1 - Math.pow(1 - t, 2.2);
+      const hx = m.x0 + m.ux * m.dist * e, hy = m.y0 + m.uy * m.dist * e;
+      const al = Math.pow(Math.sin(Math.PI * Math.min(1, t * 1.08)), 0.6);
+      const len = m.len * Math.min(1, t * 3.2) * (1 - 0.45 * t);
+      const tx = hx - m.ux * len, ty = hy - m.uy * len;
+      const nx = -m.uy, ny = m.ux;
+      // traînée effilée : large à la tête, pointue à la queue
+      const g = ctx.createLinearGradient(hx, hy, tx, ty);
+      g.addColorStop(0, `rgba(255, 255, 255, ${0.95 * al})`);
+      g.addColorStop(0.12, `rgba(214, 228, 255, ${0.6 * al})`);
+      g.addColorStop(0.5, `rgba(170, 190, 255, ${0.18 * al})`);
+      g.addColorStop(1, "rgba(170, 190, 255, 0)");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.moveTo(hx + nx * m.w * 0.5, hy + ny * m.w * 0.5);
+      ctx.lineTo(tx, ty);
+      ctx.lineTo(hx - nx * m.w * 0.5, hy - ny * m.w * 0.5);
+      ctx.closePath();
+      ctx.fill();
+      // sillage diffus
+      const g2 = ctx.createLinearGradient(hx, hy, tx, ty);
+      g2.addColorStop(0, `rgba(190, 206, 255, ${0.16 * al})`);
+      g2.addColorStop(1, "rgba(190, 206, 255, 0)");
+      ctx.strokeStyle = g2;
+      ctx.lineWidth = m.w * 3.2;
+      ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx - m.ux * len * 0.6, hy - m.uy * len * 0.6); ctx.stroke();
+      // tête lumineuse
+      const R = m.w * (m.big ? 7 : 5);
+      const hg = ctx.createRadialGradient(hx, hy, 0, hx, hy, R);
+      hg.addColorStop(0, `rgba(255, 255, 255, ${al})`);
+      hg.addColorStop(0.25, `rgba(220, 232, 255, ${0.5 * al})`);
+      hg.addColorStop(1, "rgba(200, 216, 255, 0)");
+      ctx.fillStyle = hg;
+      ctx.beginPath(); ctx.arc(hx, hy, R, 0, TAU); ctx.fill();
+      // elle sème quelques étincelles qui restent un instant
+      if (!this.reduced && Math.random() < dt * (m.big ? 70 : 34)) {
+        const k = Math.random() * 0.5;
+        this.sparks.push({
+          x: hx - m.ux * len * k + nx * (Math.random() - 0.5) * 5,
+          y: hy - m.uy * len * k + ny * (Math.random() - 0.5) * 5,
+          vx: m.ux * 14 + nx * (Math.random() - 0.5) * 16,
+          vy: m.uy * 14 + ny * (Math.random() - 0.5) * 16 + 5,
+          t0: time,
+          life: 0.5 + Math.random() * (m.big ? 1.4 : 0.8),
+          r: 0.45 + Math.random() * 0.75,
+        });
+      }
     }
   }
 

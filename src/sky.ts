@@ -168,6 +168,7 @@ const BG_FRAG = /* glsl */ `
 
     // halo de la Lune
     float glow = 0.30 * exp(-angM * 11.0) + 0.085 * exp(-angM * 2.8);
+    glow *= 1.0 + 0.08 * sin(uTime * 0.45);
     col += vec3(0.55, 0.62, 0.86) * glow * uMoonPower * uReveal;
 
     // collines à l'horizon

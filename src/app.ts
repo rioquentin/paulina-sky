@@ -42,6 +42,7 @@ export async function createApp() {
   fx.caption = content.ui.constellation;
   fx.reduced = reduced;
   fx.meteorsOn = false;
+  fx.onMeteor = (big) => sound.whisper(big ? 1.6 : 0.9);
 
   const card = new Card(reduced);
   const focus = { t: 0 };
@@ -196,6 +197,7 @@ export async function createApp() {
     if (ptr.moved && !card.isOpen) {
       panT.x = rubber(ptr.px + dx, PAN_X);
       panT.y = rubber(ptr.py + dy, PAN_Y);
+      fx.trail(e.clientX, e.clientY, time);
     }
   });
   const release = (e: PointerEvent) => {
@@ -230,6 +232,7 @@ export async function createApp() {
       if (Math.hypot(m.x - x, m.y - y) < MOON_RADIUS_PX + 24) return openMoon();
     }
     if (card.isOpen) card.close();
+    else fx.twinkle(x, y, time);
   }
 
   // ── Gyroscope ────────────────────────────────────────
