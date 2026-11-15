@@ -67,7 +67,7 @@ const STAR_VERT = /* glsl */ `
     float lit = step(1.5, state);
     gl_Position = projectSky(position);
 
-    float magShown = mix(mag, min(mag, mix(0.2, 2.4, lit)), special);
+    float magShown = mix(mag, min(mag, mix(-0.4, 1.0, lit)), special);
     float b = pow(10.0, -0.4 * magShown);
     float core = 0.72 + 3.1 * pow(b, 0.42);
 
@@ -100,7 +100,7 @@ const STAR_VERT = /* glsl */ `
 
     alpha *= mix(uDim, 1.0, special);
 
-    vColor = mix(aColor, vec3(1.0, 0.62, 0.79), special * 0.9);
+    vColor = mix(aColor, vec3(1.0, 0.34, 0.66), special);
     vAlpha = alpha * twinkle;
     // aigrettes : les étoiles les plus brillantes, et celles du lapin
     vSpike = max(smoothstep(1.7, 0.0, mag) * 0.85, special * mix(0.85 + 0.15 * pulse, 0.8, lit));

@@ -60,6 +60,7 @@ export async function createApp() {
     if (next && !fx.target) fx.targetSince = time;
     if (next && fx.target && (next[0] !== fx.target[0] || next[1] !== fx.target[1])) fx.targetSince = time;
     fx.target = next;
+    fx.lit = rabbit.stars.slice(0, seen.length).map((st) => sky.dir(st));
   };
   /** Une lumière part de la dernière étoile vue et va allumer la suivante. */
   const revealNext = () => {

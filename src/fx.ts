@@ -11,7 +11,7 @@ interface Heart { x: number; y: number; vy: number; sway: number; phase: number;
 interface Spark { x: number; y: number; vx: number; vy: number; t0: number; life: number; r: number }
 
 const WARM = "255, 232, 196";
-const PINK = "255, 190, 216"; // rose pastel des étoiles à toucher
+const PINK = "255, 150, 204"; // rose pastel des étoiles à toucher
 const TAU = Math.PI * 2;
 
 export class Fx {
@@ -54,6 +54,8 @@ export class Fx {
   caption = "";
   /** L'étoile à toucher : elle brille très fort et appelle le doigt. */
   target: Vec3 | null = null;
+  /** Les étoiles déjà vues : elles gardent un halo rose. */
+  lit: Vec3[] = [];
   targetSince = 0;
   /** Affiche la forme du lapin en debug (?debug=lapin). */
   debugShape = false;
@@ -103,37 +105,49 @@ export class Fx {
 
   private drawBeacon(time: number) {
     const { ctx, sky } = this;
+    // halo rose des étoiles déjà vues (il s'efface quand le lapin se dessine)
+    const keep = 1 - 0.7 * this.art;
+    for (const d of this.lit) {
+      const q = sky.project(d);
+      const g0 = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, 20);
+      g0.addColorStop(0, `rgba(${PINK}, ${0.42 * keep})`);
+      g0.addColorStop(0.45, `rgba(${PINK}, ${0.13 * keep})`);
+      g0.addColorStop(1, `rgba(${PINK}, 0)`);
+      ctx.fillStyle = g0;
+      ctx.beginPath(); ctx.arc(q.x, q.y, 20, 0, TAU); ctx.fill();
+    }
     if (!this.target) return;
     const p = sky.project(this.target);
     const age = time - this.targetSince;
     const appear = Math.min(1, age / 0.9);
     const pulse = 0.5 + 0.5 * Math.sin(time * 2.3);
     // halo
-    const R = 46 + 14 * pulse;
+    const R = 62 + 18 * pulse;
     const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, R);
-    g.addColorStop(0, `rgba(255, 222, 236, ${0.34 * appear * (0.7 + 0.3 * pulse)})`);
-    g.addColorStop(0.3, `rgba(${PINK}, ${0.13 * appear})`);
+    g.addColorStop(0, `rgba(255, 186, 220, ${0.62 * appear * (0.75 + 0.25 * pulse)})`);
+    g.addColorStop(0.3, `rgba(${PINK}, ${0.3 * appear})`);
+    g.addColorStop(0.65, `rgba(${PINK}, ${0.09 * appear})`);
     g.addColorStop(1, `rgba(${PINK}, 0)`);
     ctx.fillStyle = g;
     ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, TAU); ctx.fill();
     // grands rayons en croix, petits rayons en diagonale
     for (let k = 0; k < 8; k++) {
       const ang = (k / 8) * TAU;
-      const len = (k % 2 ? 16 : 40) + (k % 2 ? 5 : 16) * pulse;
+      const len = (k % 2 ? 22 : 56) + (k % 2 ? 6 : 20) * pulse;
       const ex = p.x + Math.cos(ang) * len * appear, ey = p.y + Math.sin(ang) * len * appear;
       const lg = ctx.createLinearGradient(p.x, p.y, ex, ey);
       lg.addColorStop(0, `rgba(255, 228, 240, ${0.85 * appear})`);
       lg.addColorStop(1, "rgba(255, 228, 240, 0)");
       ctx.strokeStyle = lg;
-      ctx.lineWidth = k % 2 ? 0.8 : 1.2;
+      ctx.lineWidth = k % 2 ? 1 : 1.6;
       ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(ex, ey); ctx.stroke();
     }
     // une onde douce qui s'élargit, comme un appel
     if (!this.reduced) {
       const ph = (age % 2.6) / 2.6;
-      ctx.strokeStyle = `rgba(${PINK}, ${0.4 * (1 - ph) * (1 - ph) * appear})`;
+      ctx.strokeStyle = `rgba(${PINK}, ${0.65 * (1 - ph) * (1 - ph) * appear})`;
       ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.arc(p.x, p.y, 9 + ph * 40, 0, TAU); ctx.stroke();
+      ctx.beginPath(); ctx.arc(p.x, p.y, 10 + ph * 58, 0, TAU); ctx.stroke();
     }
   }
 
