@@ -8,7 +8,7 @@ import { Card } from "./card";
 import { Finale } from "./finale";
 import { sound } from "./audio";
 import { starCaption } from "./constellations";
-import { dateFr } from "./text";
+import { dateEn } from "./text";
 
 const $ = (s: string) => document.querySelector(s) as HTMLElement;
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
@@ -88,11 +88,11 @@ export async function createApp() {
   const dots = Array.from(progress.children) as HTMLElement[];
   const paintProgress = () => {
     dots.forEach((d, i) => d.classList.toggle("on", i < seen.length));
-    progress.setAttribute("aria-label", `${seen.length} étoiles sur ${total}`);
+    progress.setAttribute("aria-label", `${seen.length} of ${total} stars`);
   };
   paintProgress();
   $("#place").innerHTML = "";
-  [nz.ville, dateFr(nz.date), nz.heure.replace(":", " h ")].forEach((t, i) => {
+  [nz.ville, dateEn(nz.date), nz.heure].forEach((t, i) => {
     if (i) {
       const sep = document.createElement("b");
       sep.textContent = "—";
@@ -112,7 +112,7 @@ export async function createApp() {
     const on = !sound.enabled;
     sound.setEnabled(on);
     soundBtn.setAttribute("aria-pressed", String(on));
-    soundBtn.setAttribute("aria-label", on ? "Couper le son" : "Activer le son");
+    soundBtn.setAttribute("aria-label", on ? "Mute sound" : "Turn sound on");
   });
 
   // ── Étoiles du lapin ─────────────────────────────────
@@ -142,7 +142,7 @@ export async function createApp() {
     fx.ring(sky.moon.dir, time, false);
     sound.chime(4, 0.7);
     $("#hint").classList.remove("on");
-    card.open(`La Lune · éclairée à ${Math.round(sky.moon.fraction * 100)} %`, content.messageLune);
+    card.open(content.ui.lune.replace("{pct}", String(Math.round(sky.moon.fraction * 100))), content.messageLune);
   }
 
   card.onClose = () => {

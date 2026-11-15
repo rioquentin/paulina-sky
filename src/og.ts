@@ -118,12 +118,12 @@ async function render(icon: boolean, W: number, H: number, name: string, type: s
     ctx.shadowBlur = 44;
     ctx.fillStyle = "#f1f2ff";
     ctx.font = 'italic 300 94px "Cormorant Garamond"';
-    ctx.fillText("Un ciel rien que pour toi", W / 2, 356);
+    ctx.fillText("A sky just for you", W / 2, 356);
     ctx.shadowBlur = 0;
     ctx.fillStyle = "rgba(238, 240, 255, 0.62)";
     ctx.font = '500 21px "Cormorant Garamond"';
     (ctx as any).letterSpacing = "9px";
-    ctx.fillText("À OUVRIR QUAND IL FAIT NUIT", W / 2 + 4, 432);
+    ctx.fillText("OPEN IT WHEN IT'S DARK", W / 2 + 4, 432);
   }
 
   // réduction propre à la taille finale

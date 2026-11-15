@@ -1,29 +1,25 @@
-// Noms français des 88 constellations, avec l'article qui convient après « étoile ».
+// Noms anglais des 88 constellations (l'anglais garde les noms latins).
 const T: Record<string, string> = {
-  And: "d’Andromède", Ant: "de la Machine pneumatique", Aps: "de l’Oiseau de paradis", Aqr: "du Verseau",
-  Aql: "de l’Aigle", Ara: "de l’Autel", Ari: "du Bélier", Aur: "du Cocher", Boo: "du Bouvier", Cae: "du Burin",
-  Cam: "de la Girafe", Cnc: "du Cancer", CVn: "des Chiens de chasse", CMa: "du Grand Chien", CMi: "du Petit Chien",
-  Cap: "du Capricorne", Car: "de la Carène", Cas: "de Cassiopée", Cen: "du Centaure", Cep: "de Céphée",
-  Cet: "de la Baleine", Cha: "du Caméléon", Cir: "du Compas", Col: "de la Colombe", Com: "de la Chevelure de Bérénice",
-  CrA: "de la Couronne australe", CrB: "de la Couronne boréale", Crv: "du Corbeau", Crt: "de la Coupe",
-  Cru: "de la Croix du Sud", Cyg: "du Cygne", Del: "du Dauphin", Dor: "de la Dorade", Dra: "du Dragon",
-  Equ: "du Petit Cheval", Eri: "de l’Éridan", For: "du Fourneau", Gem: "des Gémeaux", Gru: "de la Grue",
-  Her: "d’Hercule", Hor: "de l’Horloge", Hya: "de l’Hydre", Hyi: "de l’Hydre mâle", Ind: "de l’Indien",
-  Lac: "du Lézard", Leo: "du Lion", LMi: "du Petit Lion", Lep: "du Lièvre", Lib: "de la Balance", Lup: "du Loup",
-  Lyn: "du Lynx", Lyr: "de la Lyre", Men: "de la Table", Mic: "du Microscope", Mon: "de la Licorne",
-  Mus: "de la Mouche", Nor: "de la Règle", Oct: "de l’Octant", Oph: "d’Ophiuchus", Ori: "d’Orion", Pav: "du Paon",
-  Peg: "de Pégase", Per: "de Persée", Phe: "du Phénix", Pic: "du Peintre", Psc: "des Poissons",
-  PsA: "du Poisson austral", Pup: "de la Poupe", Pyx: "de la Boussole", Ret: "du Réticule", Sge: "de la Flèche",
-  Sgr: "du Sagittaire", Sco: "du Scorpion", Scl: "du Sculpteur", Sct: "de l’Écu", Ser: "du Serpent",
-  Sex: "du Sextant", Tau: "du Taureau", Tel: "du Télescope", Tri: "du Triangle", TrA: "du Triangle austral",
-  Tuc: "du Toucan", UMa: "de la Grande Ourse", UMi: "de la Petite Ourse", Vel: "des Voiles", Vir: "de la Vierge",
-  Vol: "du Poisson volant", Vul: "du Petit Renard",
+  And: "Andromeda", Ant: "Antlia", Aps: "Apus", Aqr: "Aquarius", Aql: "Aquila", Ara: "Ara", Ari: "Aries",
+  Aur: "Auriga", Boo: "Boötes", Cae: "Caelum", Cam: "Camelopardalis", Cnc: "Cancer", CVn: "Canes Venatici",
+  CMa: "Canis Major", CMi: "Canis Minor", Cap: "Capricornus", Car: "Carina", Cas: "Cassiopeia", Cen: "Centaurus",
+  Cep: "Cepheus", Cet: "Cetus", Cha: "Chamaeleon", Cir: "Circinus", Col: "Columba", Com: "Coma Berenices",
+  CrA: "Corona Australis", CrB: "Corona Borealis", Crv: "Corvus", Crt: "Crater", Cru: "Crux", Cyg: "Cygnus",
+  Del: "Delphinus", Dor: "Dorado", Dra: "Draco", Equ: "Equuleus", Eri: "Eridanus", For: "Fornax", Gem: "Gemini",
+  Gru: "Grus", Her: "Hercules", Hor: "Horologium", Hya: "Hydra", Hyi: "Hydrus", Ind: "Indus", Lac: "Lacerta",
+  Leo: "Leo", LMi: "Leo Minor", Lep: "Lepus", Lib: "Libra", Lup: "Lupus", Lyn: "Lynx", Lyr: "Lyra", Men: "Mensa",
+  Mic: "Microscopium", Mon: "Monoceros", Mus: "Musca", Nor: "Norma", Oct: "Octans", Oph: "Ophiuchus", Ori: "Orion",
+  Pav: "Pavo", Peg: "Pegasus", Per: "Perseus", Phe: "Phoenix", Pic: "Pictor", Psc: "Pisces", PsA: "Piscis Austrinus",
+  Pup: "Puppis", Pyx: "Pyxis", Ret: "Reticulum", Sge: "Sagitta", Sgr: "Sagittarius", Sco: "Scorpius",
+  Scl: "Sculptor", Sct: "Scutum", Ser: "Serpens", Sex: "Sextans", Tau: "Taurus", Tel: "Telescopium",
+  Tri: "Triangulum", TrA: "Triangulum Australe", Tuc: "Tucana", UMa: "Ursa Major", UMi: "Ursa Minor", Vel: "Vela",
+  Vir: "Virgo", Vol: "Volans", Vul: "Vulpecula",
 };
 
-/** « Une étoile du Taureau », ou avec son nom propre : « Aldebaran · étoile du Taureau ». */
+/** « A star in Taurus », ou avec son nom propre : « Aldebaran · a star in Taurus ». */
 export function starCaption(code: string, proper?: string): string {
-  const of = T[code.trim()];
-  if (proper && of) return `${proper} · étoile ${of}`;
+  const name = T[code.trim()];
+  if (proper && name) return `${proper} · a star in ${name}`;
   if (proper) return proper;
-  return of ? `Une étoile ${of}` : "Une étoile rien que pour toi";
+  return name ? `A star in ${name}` : "A star just for you";
 }

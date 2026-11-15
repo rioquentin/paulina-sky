@@ -5,7 +5,7 @@ import "@fontsource/cormorant-garamond/latin-500.css";
 import "./style.css";
 import { content } from "./content";
 import { sound } from "./audio";
-import { auDessusDe, dateFr } from "./text";
+import { dateEn } from "./text";
 
 const $ = (s: string) => document.querySelector(s) as HTMLElement;
 const intro = $("#intro");
@@ -13,7 +13,8 @@ const startBtn = $("#start");
 
 // ── Intro : affichée tout de suite, avant le chargement du ciel ──
 const line = $("#intro-line");
-for (const t of [`Le ciel du ${dateFr(content.naissance.date)},`, `${auDessusDe(content.naissance.ville)}.`]) {
+const fill = (t: string) => t.replace("{date}", dateEn(content.naissance.date)).replace("{ville}", content.naissance.ville);
+for (const t of [fill(content.ui.intro1), fill(content.ui.intro2)]) {
   const s = document.createElement("span");
   s.textContent = t;
   line.appendChild(s);

@@ -4,7 +4,7 @@ Une page à ouvrir sur iPhone : le vrai ciel de la nuit et du lieu de naissance,
 
 ## Modifier le contenu
 
-Tout est dans [`src/content.ts`](src/content.ts) : prénom, date, heure, ville et coordonnées, les messages (8 à 12), le mot de la Lune, le message final, la signature.
+Le site est en anglais. Tout le contenu est dans [`src/content.ts`](src/content.ts), y compris les textes d'interface (bloc `ui`) : prénom, date, heure, ville et coordonnées, les messages (8 à 12), le mot de la Lune, le message final, la signature.
 
 Le ciel, la position de la Lune et le choix des étoiles du lapin sont recalculés à partir de ce fichier. Après un changement de date, d'heure ou de ville, ouvrir `?debug` pour vérifier la forme du lapin.
 
