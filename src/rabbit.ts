@@ -6,6 +6,8 @@ type P = [number, number];
 export interface Rabbit {
   /** Indices d'étoiles dans le ciel, dans l'ordre des messages. */
   stars: number[];
+  /** Position de chaque étoile dans le gabarit (même ordre que `stars`). */
+  anchors: [number, number][];
   /** Traits, dans l'ordre où ils se dessinent (indices dans `stars`). */
   segments: [number, number][];
   /** Traits qui sont des oreilles (indices dans `segments`). */
@@ -28,19 +30,20 @@ export interface Rabbit {
  * L'ordre des points est celui des messages.
  */
 function template(n: number) {
+  // points pris sur l'icône (voir figure.ts), ramenés au repère du gabarit
   const pts: Record<string, P> = {
-    museau: [-0.58, 0.3],
-    front: [-0.3, 0.56],
-    oreilleG: [-0.37, 1.0],
-    nuque: [-0.09, 0.52],
-    oreilleD: [0.03, 0.98],
-    echine: [0.16, 0.42],
-    dos: [0.44, 0.2],
-    queue: [0.7, -0.26],
-    patteArr: [0.36, -0.5],
-    ventre: [0.04, -0.5],
-    patteAv: [-0.26, -0.5],
-    gorge: [-0.28, 0.14],
+    museau: [0.833, -0.1],
+    front: [0.383, 0.412],
+    oreilleG: [0.5, 0.833],
+    nuque: [0.092, 0.175],
+    oreilleD: [-0.142, 0.642],
+    echine: [-0.15, 0.117],
+    dos: [-0.342, -0.017],
+    queue: [-0.583, -0.167],
+    patteArr: [-0.383, -0.667],
+    ventre: [0.083, -0.75],
+    patteAv: [0.5, -0.75],
+    gorge: [0.392, -0.45],
   };
   // de 8 à 12 points selon le nombre de messages
   const order = ["museau", "front", "oreilleG", "nuque", "oreilleD", "echine", "dos", "queue", "patteArr", "ventre", "patteAv", "gorge"];
@@ -144,7 +147,7 @@ export function findRabbit(sky: Sky, count: number): Rabbit {
           for (let cy = -0.7; cy <= 0.9; cy += 0.04) {
             let cost = 0, dev = 0, ok = true;
             for (let p = 0; p < n && ok; p++) {
-              const tx = tpl.points[p][0] * mirror, ty = tpl.points[p][1] - 0.25;
+              const tx = tpl.points[p][0] * mirror, ty = tpl.points[p][1];
               const x = cx + (tx * cr - ty * sr) * s, y = cy + (tx * sr + ty * cr) * s;
               if (Math.abs(x) > 0.78 || y > 1.2 || y < -0.98) { ok = false; break; }
               const k = nearest(x, y);
@@ -180,7 +183,7 @@ export function findRabbit(sky: Sky, count: number): Rabbit {
     const cy = my > 0.2 ? -0.25 : 0.45;
     stars = tpl.points.map(([tx, ty], p) => {
       const jitter = ((p * 37) % 7) / 7 - 0.5;
-      const dir = sky.fromPlane(cx + tx * s + jitter * 0.012, cy + (ty - 0.25) * s - jitter * 0.01);
+      const dir = sky.fromPlane(cx + tx * s + jitter * 0.012, cy + ty * s - jitter * 0.01);
       return sky.addStar(dir, 3.2 + (p % 3) * 0.3, 0.2 + (p % 4) * 0.2);
     });
   }
@@ -199,5 +202,5 @@ export function findRabbit(sky: Sky, count: number): Rabbit {
     radius = Math.max(radius, Math.acos(Math.min(1, d[0] * center[0] + d[1] * center[1] + d[2] * center[2])));
   }
 
-  return { stars, segments: tpl.segments, ears: tpl.ears, tail: tpl.tail, eye: tpl.eye, real, deviation, center, radius };
+  return { stars, anchors: tpl.points, segments: tpl.segments, ears: tpl.ears, tail: tpl.tail, eye: tpl.eye, real, deviation, center, radius };
 }

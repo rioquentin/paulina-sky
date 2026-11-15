@@ -285,11 +285,12 @@ export async function createApp() {
   }
   function focusZoom() {
     const s0 = sky.scale / sky.view.zoom;
-    const want = Math.min(sky.width * 0.37, sky.height * 0.215);
+    const portrait = sky.height > sky.width * 1.25;
+    const want = portrait ? Math.min(sky.width * 0.37, sky.height * 0.215) : sky.height * 0.17;
     return clamp(want / (planeRadius * s0), 0.9, 2.4);
   }
   function focusY() {
-    return sky.height * (sky.height > sky.width ? 0.3 : 0.34);
+    return sky.height * (sky.height > sky.width * 1.25 ? 0.3 : 0.25);
   }
 
   function run() {
@@ -357,7 +358,7 @@ export async function createApp() {
       startFinale();
     });
     dbg.appendChild(all);
-    (window as any).__ciel = { sky, fx, rabbit, seen, get mode() { return mode; }, get time() { return time; } };
+    (window as any).__ciel = { sky, fx, rabbit, seen, focus, frame, get mode() { return mode; }, get time() { return time; } };
   }
 
   // quelques images dès maintenant : les shaders sont compilés avant le premier tap

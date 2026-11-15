@@ -37,6 +37,7 @@ L'adresse absolue de l'image d'aperçu est injectée au build à partir de l'URL
 
 - `src/astro.ts` : heure locale → UTC, temps sidéral (astronomy-engine), passage en azimut/hauteur, Lune.
 - `src/sky.ts` : rendu Three.js. Projection stéréographique dans le shader, étoiles (`THREE.Points`), fond avec Voie lactée et halo lunaire, Lune, bloom.
+- `src/figure.ts` : le dessin du lapin. C'est l'icône « rabbit » de [Lucide](https://lucide.dev) (licence ISC), posée sur les étoiles par rotation et échelle uniforme, sans déformation. D'autres dessins candidats sont dans `refs/` (planche : `/refs/sheet.html` en dev).
 - `src/rabbit.ts` : gabarit du lapin et recherche des vraies étoiles qui le dessinent le mieux ; repli sur des points inventés si l'écart dépasse 12,5 %.
 - `src/fx.ts` : calque 2D (anneaux, étoiles filantes, traits, cœurs).
 - `src/finale.ts` : timeline GSAP du final.
