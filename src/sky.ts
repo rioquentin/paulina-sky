@@ -117,7 +117,8 @@ const STAR_FRAG = /* glsl */ `
   void main() {
     vec2 uv = (gl_PointCoord - 0.5) * 2.0 * vScale;
     float d = length(uv);
-    float i = exp(-d * d * 16.0) + 0.16 * exp(-d * d * 3.5);
+    // cœur net et serré, puis un halo discret
+    float i = exp(-d * d * 34.0) + 0.34 * exp(-d * d * 11.0) + 0.1 * exp(-d * d * 3.2);
     i *= smoothstep(1.0, 0.55, d);
     // croix de lumière fine, qui s'éteint vers le bord
     vec2 a = abs(uv);
@@ -393,7 +394,7 @@ export class Sky {
 
     this.composer = new EffectComposer(this.renderer);
     this.composer.addPass(new RenderPass(this.scene, this.camera));
-    this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.55, 0.6, 0.3);
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.42, 0.4, 0.36);
     this.composer.addPass(this.bloom);
     this.composer.addPass(new OutputPass());
 
@@ -445,7 +446,8 @@ export class Sky {
     const h = this.canvas.clientHeight || window.innerHeight;
     this.width = w;
     this.height = h;
-    this.pxRatio = Math.min(window.devicePixelRatio || 1, this.maxRatio);
+    // au moins 2× même sur un écran 1× : le rendu est suréchantillonné, donc plus net
+    this.pxRatio = Math.min(Math.max(window.devicePixelRatio || 1, 2), this.maxRatio);
     this.renderer.setPixelRatio(this.pxRatio);
     this.renderer.setSize(w, h, false);
     this.composer.setPixelRatio(this.pxRatio);

@@ -39,7 +39,7 @@ export class Fx {
   }
 
   resize() {
-    this.ratio = Math.min(window.devicePixelRatio || 1, 2);
+    this.ratio = Math.min(Math.max(window.devicePixelRatio || 1, 2), 2);
     this.canvas.width = Math.round(this.sky.width * this.ratio);
     this.canvas.height = Math.round(this.sky.height * this.ratio);
   }
