@@ -8,10 +8,10 @@ export const content = {
   naissance: {
     date: "2005-11-16",
     heure: "23:00", // si inconnue : laisser "23:00" (ciel de nuit)
-    ville: "Toulouse", // ← à remplacer
-    lat: 43.6045, // ← coordonnées de la ville
-    lon: 1.444,
-    fuseau: "Europe/Paris",
+    ville: "Solingen",
+    lat: 51.1652, // coordonnées de la ville
+    lon: 7.0671,
+    fuseau: "Europe/Berlin",
   },
 
   // Un message par étoile du lapin, dans l'ordre où les traits se dessinent
