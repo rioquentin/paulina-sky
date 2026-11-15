@@ -9,6 +9,7 @@ import { Finale } from "./finale";
 import { sound } from "./audio";
 import { starCaption } from "./constellations";
 import { dateEn } from "./text";
+import { apply, placeOn, toIcon } from "./figure";
 
 const $ = (s: string) => document.querySelector(s) as HTMLElement;
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
@@ -33,6 +34,22 @@ export async function createApp() {
     console.warn(`Le lapin accepte 8 à 12 messages (${content.messages.length} fournis).`);
   }
   const rabbit = findRabbit(sky, total);
+
+  // Le final vise le lapin et le redresse : on cherche, dans le ciel, la direction
+  // de son centre et celle qui va de ses pattes vers ses oreilles.
+  {
+    sky.updateView();
+    const pts = rabbit.stars.map((i) => sky.project(sky.dir(i)));
+    const place = placeOn(rabbit.anchors.map(toIcon), pts.map((p) => p.x), pts.map((p) => p.y));
+    const toSky = (ix: number, iy: number) => {
+      const [x, y] = apply(place, ix, iy);
+      return sky.fromPlane((x - sky.width / 2) / sky.scale, -(y - sky.height / 2) / sky.scale);
+    };
+    const c = toSky(12, 13), top = toSky(12, 4), bottom = toSky(12, 21);
+    sky.aimF.set(c[0], c[1], c[2]).normalize();
+    sky.aimU.set(top[0] - bottom[0], top[1] - bottom[1], top[2] - bottom[2]);
+    sky.aimU.addScaledVector(sky.aimF, -sky.aimU.dot(sky.aimF)).normalize();
+  }
 
   const fx = new Fx($("#fx") as HTMLCanvasElement, sky);
   fx.rabbit = rabbit;
@@ -314,6 +331,8 @@ export async function createApp() {
     // au final, le regard revient doucement vers le lapin
     sky.pan.x = panC.x * free;
     sky.pan.y = panC.y * free;
+    // et la caméra tourne pour faire face au lapin, bien droit
+    sky.aimT = focus.t;
 
     // cadrage du final : zoom + recentrage sur le lapin, sans tourner le ciel
     const zoomTo = focusZoom();

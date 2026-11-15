@@ -251,6 +251,10 @@ export class Sky {
   view = { az: 180, alt: 72, zoom: 1 };
   /** Décalage du centre de projection, en pixels CSS (y vers le bas). */
   offset = { x: 0, y: 0 };
+  /** Visée du final : direction regardée et « haut » de l'écran, mélangés à la vue libre selon aimT. */
+  aimF = new THREE.Vector3(0, 0, 1);
+  aimU = new THREE.Vector3(0, 1, 0);
+  aimT = 0;
   pan = { x: 0, y: 0 };
   tilt = { x: 0, y: 0 };
   dim = 1;
@@ -487,6 +491,13 @@ export class Sky {
     const zr = (az * Math.PI) / 180;
     this.R.set(Math.cos(zr), -Math.sin(zr), 0); // l'ouest à droite quand on regarde le sud
     this.U.crossVectors(this.R, this.F).normalize();
+    if (this.aimT > 0) {
+      const t = this.aimT;
+      this.F.lerp(this.aimF, t).normalize();
+      this.U.lerp(this.aimU, t);
+      this.U.addScaledVector(this.F, -this.U.dot(this.F)).normalize();
+      this.R.crossVectors(this.F, this.U).normalize();
+    }
     this.viewMat.set(this.R.x, this.R.y, this.R.z, this.U.x, this.U.y, this.U.z, this.F.x, this.F.y, this.F.z);
     this.S = (Math.min(this.width, this.height) / 2 / FOV_K) * this.view.zoom;
     (this.starMat.uniforms.uScale.value as THREE.Vector2).set((2 * this.S) / this.width, (2 * this.S) / this.height);
