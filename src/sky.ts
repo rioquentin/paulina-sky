@@ -478,7 +478,7 @@ export class Sky {
   /** Recalcule la base de la vue (à appeler avant project() ou render()). */
   updateView() {
     const az = this.view.az + this.pan.x + this.tilt.x;
-    const alt = Math.max(30, Math.min(86, this.view.alt + this.pan.y + this.tilt.y));
+    const alt = Math.max(12, Math.min(89, this.view.alt + this.pan.y + this.tilt.y));
     const f = fromAltAz(alt, az);
     this.F.set(f[0], f[1], f[2]);
     this.R.set(this.F.y, -this.F.x, 0).normalize(); // F × zénith : l'ouest à droite quand on regarde le sud

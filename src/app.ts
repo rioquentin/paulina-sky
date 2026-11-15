@@ -161,6 +161,7 @@ export async function createApp() {
     if (mode !== "finale") return;
     seen.length = 0;
     armed = false;
+    panT.x = panT.y = vel.x = vel.y = 0;
     save();
     finale.reset(() => {
       mode = "sky";
@@ -175,15 +176,23 @@ export async function createApp() {
     paintProgress();
   });
 
-  // ── Toucher : glisser pour bouger un peu, taper pour ouvrir ──
+  // ── Toucher : glisser pour tourner le regard dans le ciel, taper pour ouvrir ──
+  // panT/panC sont en degrés : x = azimut (vers l'ouest à droite), y = hauteur.
   const panT = { x: 0, y: 0 }, panC = { x: 0, y: 0 };
-  const PAN_X = 64, PAN_Y = 52;
-  const rubber = (v: number, lim: number) => (Math.abs(v) <= lim ? v : Math.sign(v) * (lim + (Math.abs(v) - lim) * 0.28));
-  let ptr: { id: number; x: number; y: number; px: number; py: number; moved: boolean; t: number } | null = null;
+  const vel = { x: 0, y: 0 }; // inertie, en degrés par seconde
+  const PAN_X = 80; // jusqu'à 80° de chaque côté
+  const panYMin = () => 14 - restAlt; // presque jusqu'à l'horizon
+  const panYMax = () => 88 - restAlt; // et jusqu'au zénith
+  const rubber = (v: number, lo: number, hi: number) =>
+    v < lo ? lo - (lo - v) * 0.3 : v > hi ? hi + (v - hi) * 0.3 : v;
+  const degPerPx = () => 57.2958 / sky.scale;
+  let ptr: { id: number; x: number; y: number; px: number; py: number; moved: boolean; t: number; lx: number; ly: number; lt: number } | null = null;
 
   canvas.addEventListener("pointerdown", (e) => {
     if (mode !== "sky") return;
-    ptr = { id: e.pointerId, x: e.clientX, y: e.clientY, px: panT.x, py: panT.y, moved: false, t: performance.now() };
+    const now = performance.now();
+    ptr = { id: e.pointerId, x: e.clientX, y: e.clientY, px: panT.x, py: panT.y, moved: false, t: now, lx: e.clientX, ly: e.clientY, lt: now };
+    vel.x = vel.y = 0;
     try { canvas.setPointerCapture(e.pointerId); } catch { /* pointeur déjà relâché */ }
   });
   canvas.addEventListener("pointermove", (e) => {
@@ -198,8 +207,14 @@ export async function createApp() {
     const dx = e.clientX - ptr.x, dy = e.clientY - ptr.y;
     if (!ptr.moved && Math.hypot(dx, dy) > 9) ptr.moved = true;
     if (ptr.moved && !card.isOpen) {
-      panT.x = rubber(ptr.px + dx, PAN_X);
-      panT.y = rubber(ptr.py + dy, PAN_Y);
+      const k = degPerPx();
+      // le ciel suit le doigt : glisser vers la droite montre ce qui est à gauche
+      panT.x = rubber(ptr.px - dx * k, -PAN_X, PAN_X);
+      panT.y = rubber(ptr.py + dy * k, panYMin(), panYMax());
+      const now = performance.now(), dtm = Math.max(1, now - ptr.lt) / 1000;
+      vel.x = 0.6 * vel.x + 0.4 * ((-(e.clientX - ptr.lx) * k) / dtm);
+      vel.y = 0.6 * vel.y + 0.4 * (((e.clientY - ptr.ly) * k) / dtm);
+      ptr.lx = e.clientX; ptr.ly = e.clientY; ptr.lt = now;
       fx.trail(e.clientX, e.clientY, time);
     }
   });
@@ -207,8 +222,9 @@ export async function createApp() {
     if (!ptr || e.pointerId !== ptr.id) return;
     const p = ptr;
     ptr = null;
-    panT.x = clamp(panT.x, -PAN_X, PAN_X);
-    panT.y = clamp(panT.y, -PAN_Y, PAN_Y);
+    // un geste arrêté avant de lâcher ne doit pas relancer le ciel
+    if (performance.now() - p.lt > 80) vel.x = vel.y = 0;
+    if (!p.moved) vel.x = vel.y = 0;
     if (e.type === "pointerup" && !p.moved && performance.now() - p.t < 700) tap(e.clientX, e.clientY);
   };
   canvas.addEventListener("pointerup", release);
@@ -269,6 +285,18 @@ export async function createApp() {
     time += dt;
 
     const kp = 1 - Math.exp(-dt * 16), kt = 1 - Math.exp(-dt * 3.5);
+    // inertie après le lâcher, puis retour doux dans les limites
+    if (!ptr) {
+      panT.x += vel.x * dt;
+      panT.y += vel.y * dt;
+      const fr = Math.exp(-dt * 3.2);
+      vel.x *= fr;
+      vel.y *= fr;
+      const kb = 1 - Math.exp(-dt * 9);
+      const cx = clamp(panT.x, -PAN_X, PAN_X), cy = clamp(panT.y, panYMin(), panYMax());
+      if (cx !== panT.x) { panT.x += (cx - panT.x) * kb; vel.x *= 0.5; }
+      if (cy !== panT.y) { panT.y += (cy - panT.y) * kb; vel.y *= 0.5; }
+    }
     panC.x += (panT.x - panC.x) * kp;
     panC.y += (panT.y - panC.y) * kp;
     tiltC.x += (tiltT.x - tiltC.x) * kt;
@@ -276,6 +304,9 @@ export async function createApp() {
     const free = 1 - focus.t;
     sky.tilt.x = tiltC.x * (0.35 + 0.65 * free);
     sky.tilt.y = tiltC.y * (0.35 + 0.65 * free);
+    // au final, le regard revient doucement vers le lapin
+    sky.pan.x = panC.x * free;
+    sky.pan.y = panC.y * free;
 
     // cadrage du final : zoom + recentrage sur le lapin, sans tourner le ciel
     const zoomTo = focusZoom();
@@ -283,8 +314,8 @@ export async function createApp() {
     sky.updateView();
     const [px, py] = sky.plane(rabbit.center);
     const fy = focusY();
-    sky.offset.x = panC.x * free + -px * sky.scale * focus.t;
-    sky.offset.y = panC.y * free + (fy - sky.height / 2 + py * sky.scale) * focus.t;
+    sky.offset.x = -px * sky.scale * focus.t;
+    sky.offset.y = (fy - sky.height / 2 + py * sky.scale) * focus.t;
 
     sky.render(time);
     fx.draw(time, dt);
