@@ -180,9 +180,9 @@ export async function createApp() {
   // panT/panC sont en degrés : x = azimut (vers l'ouest à droite), y = hauteur.
   const panT = { x: 0, y: 0 }, panC = { x: 0, y: 0 };
   const vel = { x: 0, y: 0 }; // inertie, en degrés par seconde
-  const PAN_X = 80; // jusqu'à 80° de chaque côté
-  const panYMin = () => 14 - restAlt; // presque jusqu'à l'horizon
-  const panYMax = () => 88 - restAlt; // et jusqu'au zénith
+  // à gauche et à droite : tour complet, sans limite
+  const panYMin = () => 8 - restAlt; // jusqu'à l'horizon devant
+  const panYMax = () => 172 - restAlt; // par-dessus le zénith, jusqu'à l'horizon derrière
   const rubber = (v: number, lo: number, hi: number) =>
     v < lo ? lo - (lo - v) * 0.3 : v > hi ? hi + (v - hi) * 0.3 : v;
   const degPerPx = () => 57.2958 / sky.scale;
@@ -209,7 +209,7 @@ export async function createApp() {
     if (ptr.moved && !card.isOpen) {
       const k = degPerPx();
       // le ciel suit le doigt : glisser vers la droite montre ce qui est à gauche
-      panT.x = rubber(ptr.px - dx * k, -PAN_X, PAN_X);
+      panT.x = ptr.px - dx * k;
       panT.y = rubber(ptr.py + dy * k, panYMin(), panYMax());
       const now = performance.now(), dtm = Math.max(1, now - ptr.lt) / 1000;
       vel.x = 0.6 * vel.x + 0.4 * ((-(e.clientX - ptr.lx) * k) / dtm);
@@ -293,9 +293,16 @@ export async function createApp() {
       vel.x *= fr;
       vel.y *= fr;
       const kb = 1 - Math.exp(-dt * 9);
-      const cx = clamp(panT.x, -PAN_X, PAN_X), cy = clamp(panT.y, panYMin(), panYMax());
-      if (cx !== panT.x) { panT.x += (cx - panT.x) * kb; vel.x *= 0.5; }
+      const cy = clamp(panT.y, panYMin(), panYMax());
       if (cy !== panT.y) { panT.y += (cy - panT.y) * kb; vel.y *= 0.5; }
+    }
+    // on ramène l'azimut dans [-180°, 180°] sans que rien ne bouge à l'écran,
+    // pour que le retour vers le lapin au final prenne le chemin le plus court
+    if (Math.abs(panC.x) > 180) {
+      const w = 360 * Math.round(panC.x / 360);
+      panC.x -= w;
+      panT.x -= w;
+      if (ptr) ptr.px -= w;
     }
     panC.x += (panT.x - panC.x) * kp;
     panC.y += (panT.y - panC.y) * kp;

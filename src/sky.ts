@@ -478,10 +478,14 @@ export class Sky {
   /** Recalcule la base de la vue (à appeler avant project() ou render()). */
   updateView() {
     const az = this.view.az + this.pan.x + this.tilt.x;
-    const alt = Math.max(12, Math.min(89, this.view.alt + this.pan.y + this.tilt.y));
+    // la hauteur peut dépasser 90° : on passe le zénith et on continue vers l'autre horizon,
+    // comme quand on renverse la tête en arrière
+    const alt = Math.max(8, Math.min(172, this.view.alt + this.pan.y + this.tilt.y));
     const f = fromAltAz(alt, az);
     this.F.set(f[0], f[1], f[2]);
-    this.R.set(this.F.y, -this.F.x, 0).normalize(); // F × zénith : l'ouest à droite quand on regarde le sud
+    // l'axe « droite » ne dépend que de l'azimut : aucun saut d'image au zénith
+    const zr = (az * Math.PI) / 180;
+    this.R.set(Math.cos(zr), -Math.sin(zr), 0); // l'ouest à droite quand on regarde le sud
     this.U.crossVectors(this.R, this.F).normalize();
     this.viewMat.set(this.R.x, this.R.y, this.R.z, this.U.x, this.U.y, this.U.z, this.F.x, this.F.y, this.F.z);
     this.S = (Math.min(this.width, this.height) / 2 / FOV_K) * this.view.zoom;
