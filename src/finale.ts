@@ -49,7 +49,7 @@ export class Finale {
     gsap.set(letters, { opacity: 0, y: 20, filter: "blur(7px)" });
 
     const tl = (this.tl = gsap.timeline());
-    const SEG = 0.5, STEP = 0.5, START = 2.7;
+    const STEP = 0.32, START = 1.6;
 
     // 1. le ciel se calme, on se rapproche
     tl.to(["#progress", "#place", "#hint"], { opacity: 0, duration: 1.2, ease: "sine.out" }, 0);
@@ -57,28 +57,24 @@ export class Finale {
     tl.to(focus, { t: 1, duration: reduced ? 1.6 : 3.3, ease: "power2.inOut" }, 0);
     tl.set(fx, { linesAlpha: 1 }, START - 0.1);
 
-    // 2. la constellation : un trait après l'autre, une note après l'autre
-    rabbit.segments.forEach((_, k) => {
-      const at = START + k * STEP;
-      const o = { v: 0 };
-      tl.to(o, { v: 1, duration: SEG, ease: "power2.inOut", onUpdate: () => (fx.seg[k] = o.v) }, at);
-      tl.call(() => sound.chime(k + 1, 0.8), [], at);
+    // 2. ses étoiles s'illuminent une à une, sur une gamme qui monte (aucun trait droit)
+    rabbit.stars.forEach((s, k) => {
+      tl.call(
+        () => {
+          fx.ring(sky.dir(s), now());
+          sound.chime(k + 1, 0.8);
+        },
+        [],
+        START + k * STEP,
+      );
     });
-    const done = START + (rabbit.segments.length - 1) * STEP + SEG;
+    const done = START + (rabbit.stars.length - 1) * STEP + 0.7;
 
     // 3. un éclat, puis le lapin se dessine à la lumière autour de ses étoiles
-    tl.call(
-      () => {
-        sound.bloom();
-        if (!reduced) rabbit.stars.forEach((s, i) => gsap.delayedCall(i * 0.05, () => fx.ring(sky.dir(s), now())));
-      },
-      [],
-      done + 0.1,
-    );
+    tl.call(() => sound.bloom(), [], done + 0.1);
     tl.to(fx, { flash: 1, duration: 0.45, ease: "power2.out" }, done + 0.1);
     tl.to(fx, { flash: 0, duration: 2.4, ease: "sine.out" }, done + 0.55);
     tl.to(fx, { art: 1, duration: reduced ? 1.4 : 3.4, ease: "none" }, done + 0.35);
-    tl.to(fx, { skeleton: 0.22, duration: 2.4, ease: "sine.inOut" }, done + 1.2);
     tl.to(fx, { artFill: 1, duration: 2.6, ease: "sine.inOut" }, done + 1.9);
     tl.to(sky, { dim: 0.46, duration: 3, ease: "sine.inOut" }, done + 1.5);
     [9, 11, 12, 13].forEach((s, i) => tl.call(() => sound.chime(s, 0.32), [], done + 0.7 + i * 0.55));
