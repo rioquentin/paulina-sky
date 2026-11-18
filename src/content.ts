@@ -23,8 +23,8 @@ export const content = {
     "We met in a place that wasn’t made for meeting anyone. Fire everywhere.\nAnd somewhere in it, a flower. I didn’t even know it was one yet.\nNow I do. You’re beautiful, and your soul shines even brighter.",
     // 3 · quelqu'un de distant
     "I’m someone who keeps the world at a distance. I always have been.\nThen you showed up, and I forgot to.",
-    // 4 · rien n'était gravé dans le marbre
-    "I always thought some things about me would never change.\nThen I met you. Turns out I was wrong, and I’ve never been this happy to be wrong.",
+    // 4 · ce qu'elle change autour d'elle sans le voir
+    "You have a way of changing things without even trying.\nJust by being you, everything around you gets a little softer, a little warmer. You don’t even notice it. I do.",
     // 5 · son rire
     "If I could keep only one sound in the whole world, it would be your laugh. Those little giggles, and everything that comes after.",
     // 6 · la blague (on respire)
