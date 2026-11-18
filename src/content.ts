@@ -50,7 +50,7 @@ export const content = {
     intro1: "The sky of {date},", // {date} = date de naissance
     intro2: "above {ville}.", // {ville} = ville de naissance
     commencer: "Touch to begin",
-    indice: "One star shines brighter than the others…",
+    indice: "One star shines brighter than the others… Try touching it.",
     joyeux: "Happy birthday",
     revoir: "See the sky again",
     constellation: "the Rabbit", // légende sous la constellation ("" pour l'enlever)
