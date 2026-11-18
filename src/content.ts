@@ -28,9 +28,9 @@ export const content = {
     // 5 · son rire
     "If I could keep only one sound in the whole world, it would be your laugh. Those little giggles, and everything that comes after.",
     // 6 · la blague (on respire)
-    "I wanted to write something deep and poetic here.\nBut… big butt. But your butt.\nOkay. We can continue now. Hahaha.",
+    "I wanted to write something deep and poetic here.\nBut… big but, your butt.\nOkay. We can continue now. Hahaha.",
     // 7 · des souvenirs flous
-    "I don’t even know how long it’s been. It feels like forever, and like something I can’t put into words.\nToo many memories and not nearly enough, all a little blurry. Good: it means I was busy being there.",
+    "I don’t even know how long it’s been. It feels like forever, and like something I can’t put into words.\nToo many memories and not nearly enough, all a little blurry. Good, it means I was busy being there.",
     // 8 · quand elle doute
     "Whatever life throws at you, never forget this: there will always be people for whom you matter.\nI’m one of them.",
     // 9 · ce que je lui souhaite
