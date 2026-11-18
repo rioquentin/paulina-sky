@@ -18,7 +18,7 @@ export const content = {
   // Un message par étoile, dans l'ordre où elle les découvre. 8 à 12 messages possibles.
   messages: [
     // 1 · l'arrivée
-    "You found me.\nThis is the exact sky that was above Solingen the night you were born. It waited twenty-one years for you to look up.",
+    "This is the exact sky that was above Solingen the night you were born. It waited twenty-one years for you to look up.\nThat night, the Moon was full. As if it didn’t want to miss you.",
     // 2 · la fleur au milieu des flammes
     "We met in a place that wasn’t made for meeting anyone. Fire everywhere.\nAnd somewhere in it, a flower. I didn’t even know it was one yet.\nNow I do. You’re beautiful, and your soul shines even brighter.",
     // 3 · quelqu'un de distant
@@ -40,7 +40,7 @@ export const content = {
   ],
 
   // Petit mot quand elle touche la Lune (laisser "" pour désactiver).
-  messageLune: "The night you were born, the Moon was full.\nAs if it didn’t want to miss you.",
+  messageLune: "", // le mot de la Lune est désormais dans le message 1
 
   messageFinal: "Life will have its storms, and its fires.\nBut tonight the sky drew you a little rabbit, just to tell you this: you have a place here, and people who will keep looking up for you.\nAlles Gute zum Geburtstag.",
   signature: "Quentin",
