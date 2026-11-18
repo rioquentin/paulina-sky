@@ -40,7 +40,8 @@ Promise.race([
   new Promise((r) => setTimeout(r, 1000)),
 ]).then(() => requestAnimationFrame(() => intro.classList.add("is-ready")));
 
-// ── Le ciel se charge pendant qu'elle lit ──
+// ── Le ciel et la musique se chargent pendant qu'elle lit ──
+sound.preload();
 const appReady = import("./app").then((m) => m.createApp());
 appReady.catch((e) => console.error("Chargement du ciel impossible :", e));
 

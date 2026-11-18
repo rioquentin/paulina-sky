@@ -1,8 +1,12 @@
-// Tout le son est synthétisé (Web Audio) : aucun fichier à charger, aucune licence.
+// Musique : un enregistrement de piano (public/music.m4a), lu en boucle, en fondu.
+// Carillons : synthétisés (Web Audio), accordés sur la tonalité du morceau.
 // Rien d'essentiel ne dépend du son : le bouton silencieux de l'iPhone le coupe.
 
-// Gamme pentatonique de ré majeur, qui monte.
-const SCALE = [293.66, 329.63, 369.99, 440.0, 493.88, 587.33, 659.25, 739.99, 880.0, 987.77, 1174.66, 1318.51, 1479.98, 1760.0];
+// Gamme pentatonique de la bémol majeur (relatif de fa mineur, la tonalité du morceau), qui monte.
+const SCALE = [349.23, 415.3, 466.16, 523.25, 622.25, 698.46, 830.61, 932.33, 1046.5, 1244.51, 1396.91, 1661.22, 1864.66, 2093.0];
+
+const MUSIC_LEVEL = 0.62; // volume de fond
+const MUSIC_DUCK = 0.32; // pendant qu'elle lit une carte
 
 class Sound {
   private ctx: AudioContext | null = null;
@@ -10,7 +14,74 @@ class Sound {
   private wet!: GainNode;
   private padGain!: GainNode;
   private padStarted = false;
+  private music: HTMLAudioElement | null = null;
+  private musicGain: GainNode | null = null;
+  private musicOut: GainNode | null = null;
+  private ducked = false;
+  private musicOn = false;
   enabled = true;
+
+  /** Prépare le fichier tout de suite, pour qu'il soit prêt au premier tap. */
+  preload() {
+    if (this.music) return;
+    const a = new Audio();
+    a.src = import.meta.env.BASE_URL + "music.m4a";
+    a.loop = true;
+    a.preload = "auto";
+    a.setAttribute("playsinline", "");
+    this.music = a;
+  }
+
+  /** Lance la musique (dans le geste utilisateur, pour iOS), en fondu. */
+  private startMusic() {
+    this.preload();
+    const a = this.music!;
+    const ctx = this.ctx;
+    if (ctx && !this.musicGain) {
+      try {
+        const src = ctx.createMediaElementSource(a);
+        this.musicGain = ctx.createGain();
+        this.musicGain.gain.value = 0;
+        this.musicOut = ctx.createGain();
+        this.musicOut.gain.value = this.enabled ? 1 : 0;
+        src.connect(this.musicGain);
+        this.musicGain.connect(this.musicOut);
+        this.musicOut.connect(ctx.destination);
+      } catch {
+        this.musicGain = null;
+      }
+    }
+    if (!this.musicGain) a.volume = 0; // repli sans Web Audio
+    const p = a.play();
+    if (p) p.catch(() => {});
+    this.musicOn = true;
+    this.level(MUSIC_LEVEL, 5);
+  }
+
+  /** Amène le volume de la musique à v en ~sec secondes. */
+  private level(v: number, sec: number) {
+    if (this.musicGain && this.ctx) {
+      const g = this.musicGain.gain, t = this.ctx.currentTime;
+      g.cancelScheduledValues(t);
+      g.setValueAtTime(g.value, t);
+      g.linearRampToValueAtTime(v, t + sec);
+    } else if (this.music) {
+      const a = this.music, from = a.volume, t0 = performance.now();
+      const step = () => {
+        const k = Math.min(1, (performance.now() - t0) / (sec * 1000));
+        a.volume = Math.max(0, Math.min(1, (from + (v - from) * k) * (this.enabled ? 1 : 0)));
+        if (k < 1) requestAnimationFrame(step);
+      };
+      step();
+    }
+  }
+
+  /** Baisse la musique pendant la lecture d'une carte, la remonte ensuite. */
+  duck(on: boolean) {
+    if (!this.musicOn || on === this.ducked) return;
+    this.ducked = on;
+    this.level(on ? MUSIC_DUCK : MUSIC_LEVEL, on ? 0.6 : 1.6);
+  }
 
   /** À appeler dans un geste utilisateur (obligatoire sur iOS). */
   unlock() {
@@ -66,6 +137,7 @@ class Sound {
     } catch {
       this.ctx = null;
     }
+    if (!this.musicOn) this.startMusic();
   }
 
   /** Nappe ambiante : quelques sinus désaccordés qui respirent lentement. */
@@ -106,7 +178,7 @@ class Sound {
     const f = SCALE[Math.max(0, Math.min(SCALE.length - 1, step))];
     const t = ctx.currentTime + delay;
     const out = ctx.createGain();
-    out.gain.value = 0.16 * gain;
+    out.gain.value = 0.11 * gain;
     out.connect(this.master);
     out.connect(this.wet);
     const partials: [number, number, number][] = [
@@ -159,18 +231,28 @@ class Sound {
 
   setEnabled(on: boolean) {
     this.enabled = on;
+    if (this.music && !this.musicGain) this.music.muted = !on;
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
     this.master.gain.cancelScheduledValues(t);
     this.master.gain.setTargetAtTime(on ? 1 : 0, t, 0.08);
+    if (this.musicOut) {
+      this.musicOut.gain.cancelScheduledValues(t);
+      this.musicOut.gain.setTargetAtTime(on ? 1 : 0, t, 0.12);
+    }
     if (on && this.ctx.state !== "running") void this.ctx.resume();
   }
 
   pause() {
+    this.music?.pause();
     if (this.ctx && this.ctx.state === "running") void this.ctx.suspend();
   }
 
   resume() {
+    if (this.musicOn && this.music) {
+      const p = this.music.play();
+      if (p) p.catch(() => {});
+    }
     if (this.ctx && this.enabled && this.ctx.state !== "running") void this.ctx.resume();
   }
 }

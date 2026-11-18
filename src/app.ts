@@ -151,6 +151,7 @@ export async function createApp() {
     fx.ring(sky.dir(star), time);
     sound.chime(seen.indexOf(k), 1);
     const caption = rabbit.real ? starCaption(data.c.slice(star * 3, star * 3 + 3), data.names[star]) : starCaption("");
+    sound.duck(true);
     card.open(caption, content.messages[k] ?? "");
   }
 
@@ -158,10 +159,12 @@ export async function createApp() {
     fx.ring(sky.moon.dir, time, false);
     sound.chime(4, 0.7);
     $("#hint").classList.remove("on");
+    sound.duck(true);
     card.open(content.ui.lune.replace("{pct}", String(Math.round(sky.moon.fraction * 100))), content.messageLune);
   }
 
   card.onClose = () => {
+    sound.duck(false);
     if (mode === "sky" && seen.length === total) startFinale();
     else revealNext();
   };
@@ -458,7 +461,7 @@ export async function createApp() {
       startFinale();
     });
     dbg.appendChild(all);
-    (window as any).__ciel = { sky, fx, rabbit, seen, focus, arrival, step: (dt = 0.016) => update(dt, dt), get mode() { return mode; }, get time() { return time; } };
+    (window as any).__ciel = { sky, fx, rabbit, seen, sound, focus, arrival, step: (dt = 0.016) => update(dt, dt), get mode() { return mode; }, get time() { return time; } };
   }
 
   // quelques images dès maintenant : les shaders sont compilés avant le premier tap
