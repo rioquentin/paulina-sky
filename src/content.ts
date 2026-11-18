@@ -7,7 +7,7 @@ export const content = {
   prenom: "Paulina",
 
   naissance: {
-    date: "2005-11-16",
+    date: "2005-11-19",
     heure: "23:00", // si inconnue : laisser "23:00" (ciel de nuit)
     ville: "Solingen",
     lat: 51.1652, // coordonnées de la ville
@@ -18,7 +18,7 @@ export const content = {
   // Un message par étoile, dans l'ordre où elle les découvre. 8 à 12 messages possibles.
   messages: [
     // 1 · l'arrivée
-    "This is the exact sky that was above Solingen the night you were born. It waited twenty-one years for you to look up.\nThat night, the Moon was full. As if it didn’t want to miss you.",
+    "This is the exact sky that was above Solingen the night you were born. It waited twenty-one years for you to look up.\nThat night, the Moon was still almost full. As if it didn’t want to miss you.",
     // 2 · la fleur au milieu des flammes
     "We met in a place that wasn’t made for meeting anyone. Fire everywhere.\nAnd somewhere in it, a flower. I didn’t even know it was one yet.\nNow I do. You’re beautiful, and your soul shines even brighter.",
     // 3 · quelqu'un de distant

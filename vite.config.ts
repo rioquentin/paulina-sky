@@ -44,6 +44,7 @@ function absoluteOg(): Plugin {
 }
 
 export default defineConfig({
+  base: process.env.BASE_PATH || "/",
   plugins: [saveImages(), absoluteOg()],
   build: { target: "es2020", chunkSizeWarningLimit: 900 },
 });
