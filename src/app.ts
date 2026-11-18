@@ -59,7 +59,6 @@ export async function createApp() {
   fx.caption = content.ui.constellation;
   fx.reduced = reduced;
   fx.meteorsOn = false;
-  fx.onMeteor = (big) => sound.whisper(big ? 1.6 : 0.9);
 
   const card = new Card(reduced);
   const focus = { t: 0 };
@@ -473,7 +472,6 @@ export async function createApp() {
       time = Math.max(time, 0);
       if (gyro && !reduced) window.addEventListener("deviceorientation", onOrientation);
       $("#hud").classList.remove("is-hidden");
-      sound.startPad();
       gsap.to(sky, { reveal: 1, duration: reduced ? 1.5 : 6.5, ease: "sine.inOut" });
       if (!reduced) {
         // le regard part de l'horizon et se lève vers le zénith, en reculant doucement
