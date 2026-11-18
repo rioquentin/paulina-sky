@@ -20,7 +20,7 @@ export const content = {
     // 1 · l'arrivée
     "You found me.\nThis is the exact sky that was above Solingen the night you were born. It waited twenty-one years for you to look up.",
     // 2 · la fleur au milieu des flammes
-    "We met in a place that wasn’t made for meeting anyone. Fire everywhere.\nAnd somewhere in it, a flower. I didn’t even know it was one yet.",
+    "We met in a place that wasn’t made for meeting anyone. Fire everywhere.\nAnd somewhere in it, a flower. I didn’t even know it was one yet.\nNow I do. You’re beautiful, and your soul is even more beautiful.",
     // 3 · quelqu'un de distant
     "I’m someone who keeps the world at a distance. I always have been.\nThen you showed up, and I forgot to.",
     // 4 · rien n'était gravé dans le marbre
@@ -31,8 +31,8 @@ export const content = {
     "I wanted to write something deep and poetic here.\nBut… big but, your butt.\nOkay. We can continue now. Hahaha.",
     // 7 · des souvenirs flous
     "I don’t even know how long it’s been. It feels like forever, and like something I can’t put into words.\nToo many memories and not nearly enough, all a little blurry. Good, it means I was busy being there.",
-    // 8 · quand elle doute
-    "Whatever life throws at you, never forget this: there will always be people for whom you matter.\nI’m one of them.",
+    // 8 · elle aide tout le monde, et je suis là pour elle
+    "You work so hard to help the people around you. You give so much of yourself.\nJust know you never have to carry it all alone. I’m here to help you too.",
     // 9 · ce que je lui souhaite
     "This year, I wish you comfort. A place that feels like yours. People who feel like home.\nDu gehörst hierher. You belong here.",
     // 10 · vers le lapin
