@@ -24,7 +24,7 @@ export const content = {
     // 3 · quelqu'un de distant
     "I’m someone who keeps the world at a distance. I always have been.\nThen you showed up, and I forgot to.",
     // 4 · ce qu'elle change autour d'elle sans le voir
-    "You probably don’t realize what you bring into a room.\nJust by being you, everything gets a little softer, a little warmer, and people breathe a little easier. You don’t even notice it. I do.",
+    "You probably don’t realize what you bring into a room.\nJust by being you, everything gets a little softer, a little warmer, a little brighter.",
     // 5 · son rire
     "If I could keep only one sound in the whole world, it would be your laugh. Those little giggles, and everything that comes after.",
     // 6 · la blague (on respire)
