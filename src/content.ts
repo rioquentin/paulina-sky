@@ -4,7 +4,7 @@
 //  Après un changement : `npm run deploy`.
 // ─────────────────────────────────────────────────────────────
 export const content = {
-  prenom: "Name", // ← à remplacer
+  prenom: "Paulina",
 
   naissance: {
     date: "2005-11-16",
@@ -17,23 +17,33 @@ export const content = {
 
   // Un message par étoile, dans l'ordre où elle les découvre. 8 à 12 messages possibles.
   messages: [
-    "Message 1 — to replace.",
-    "Message 2 — to replace.",
-    "Message 3 — to replace.",
-    "Message 4 — to replace.",
-    "Message 5 — to replace.",
-    "Message 6 — to replace.",
-    "Message 7 — to replace.",
-    "Message 8 — to replace.",
-    "Message 9 — to replace.",
-    "Message 10 — to replace.",
+    // 1 · l'arrivée
+    "You found me.\nThis is the exact sky that was above Solingen the night you were born. It waited twenty-one years for you to look up.",
+    // 2 · la fleur au milieu des flammes
+    "We met in a place that wasn’t made for meeting anyone. Fire everywhere.\nAnd somewhere in it, a flower. I didn’t even know it was one yet.",
+    // 3 · quelqu'un de distant
+    "I’m someone who keeps the world at a distance. I always have been.\nThen you showed up, and I forgot to.",
+    // 4 · rien n'était gravé dans le marbre
+    "I used to think some things about me were carved in stone.\nTurns out they were only possibilities, waiting for the right person.",
+    // 5 · son rire
+    "If I could keep only one sound in the whole world, it would be your laugh. Those little giggles, and everything that comes after.",
+    // 6 · la blague (on respire)
+    "I wanted to write something deep and poetic here.\nBut… big butt. And your butt.\nOkay. We can continue now.",
+    // 7 · des souvenirs flous
+    "Not even a month. Too many memories, and not nearly enough.\nThey’re all a little blurry, and I like it that way: it means I was busy being there.",
+    // 8 · quand elle doute
+    "Whatever life throws at you, never forget this: there will always be people for whom you matter.\nI’m one of them.",
+    // 9 · ce que je lui souhaite
+    "This year, I wish you comfort. A place that feels like yours. People who feel like home.\nDu gehörst hierher. You belong here.",
+    // 10 · vers le lapin
+    "One of the first names I ever gave you was a silly little one.\nNow look up, Häschen. Let’s see what all these stars were drawing.",
   ],
 
   // Petit mot quand elle touche la Lune (laisser "" pour désactiver).
-  messageLune: "The night you were born, the Moon was full.",
+  messageLune: "The night you were born, the Moon was full.\nAs if it didn’t want to miss you.",
 
-  messageFinal: "Final message — to replace.",
-  signature: "Signature",
+  messageFinal: "Life will have its storms, and its fires.\nBut tonight the sky drew you a little rabbit, just to tell you this: you have a place here, and people who will keep looking up for you.\nAlles Gute zum Geburtstag.",
+  signature: "Quentin",
 
   // Textes d'interface (modifiables aussi).
   ui: {
