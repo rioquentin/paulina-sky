@@ -93,7 +93,7 @@ export async function createApp() {
       lastFind = time;
       refresh();
       fx.ring(to, time);
-      sound.chime(Math.min(13, seen.length + 3), 0.45);
+      sound.sfx("next");
     });
   };
   refresh();
@@ -149,22 +149,19 @@ export async function createApp() {
     }
     $("#hint").classList.remove("on");
     fx.ring(sky.dir(star), time);
-    sound.chime(seen.indexOf(k), 1);
+    sound.sfx("star");
     const caption = rabbit.real ? starCaption(data.c.slice(star * 3, star * 3 + 3), data.names[star]) : starCaption("");
-    sound.duck(true);
     card.open(caption, content.messages[k] ?? "");
   }
 
   function openMoon() {
     fx.ring(sky.moon.dir, time, false);
-    sound.chime(4, 0.7);
+    sound.sfx("moon");
     $("#hint").classList.remove("on");
-    sound.duck(true);
     card.open(content.ui.lune.replace("{pct}", String(Math.round(sky.moon.fraction * 100))), content.messageLune);
   }
 
   card.onClose = () => {
-    sound.duck(false);
     if (mode === "sky" && seen.length === total) startFinale();
     else revealNext();
   };
@@ -483,7 +480,7 @@ export async function createApp() {
         gsap.to(sky.view, { alt: restAlt, duration: 7.5, ease: "power3.out" });
         gsap.to(arrival, { zoom: 1, duration: 7.5, ease: "power3.out" });
         // une gamme égrenée pendant que les étoiles s'allument, et une grande étoile filante
-        [0, 2, 3, 5, 7, 8, 10].forEach((n, i) => gsap.delayedCall(0.6 + i * 0.52, () => sound.chime(n, 0.28)));
+        gsap.delayedCall(0.6, () => sound.sfx("arrival"));
         gsap.delayedCall(3.4, () => fx.shoot());
       }
       // reprise d'une visite interrompue (rechargement, perte de contexte)
@@ -508,8 +505,7 @@ export async function createApp() {
           armed = true;
           refresh();
           if (fx.target) fx.ring(fx.target, time);
-          sound.chime(9, 0.55);
-          sound.chime(12, 0.4, 0.14);
+          sound.sfx("next");
         }
         if (seen.length === 0) $("#hint").classList.add("on");
         if (seen.length === total) startFinale();

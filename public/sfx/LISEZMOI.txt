@@ -1,0 +1,3 @@
+Déposer ici les effets sonores en .mp3, nommés :
+arrival, next, star, moon, light, bloom, draw
+Un fichier absent = ce moment reste silencieux.

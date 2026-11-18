@@ -1,11 +1,11 @@
 // Musique : un enregistrement de piano (public/music.m4a), lu en boucle, en fondu.
-// Carillons : synthétisés (Web Audio), accordés sur la tonalité du morceau.
+// Effets : fichiers courts dans public/sfx/<nom>.mp3 ; un son absent reste simplement muet.
 // Rien d'essentiel ne dépend du son : le bouton silencieux de l'iPhone le coupe.
 
 // Gamme pentatonique de la bémol majeur (relatif de fa mineur, la tonalité du morceau), qui monte.
 const SCALE = [349.23, 415.3, 466.16, 523.25, 622.25, 698.46, 830.61, 932.33, 1046.5, 1244.51, 1396.91, 1661.22, 1864.66, 2093.0];
 
-const MUSIC_LEVEL = 0.62; // volume de fond
+const MUSIC_LEVEL = 0.4; // volume de fond, discret
 const MUSIC_DUCK = 0.32; // pendant qu'elle lit une carte
 
 class Sound {
@@ -18,6 +18,7 @@ class Sound {
   private musicGain: GainNode | null = null;
   private musicOut: GainNode | null = null;
   private ducked = false;
+  private buffers = new Map<string, AudioBuffer | null>();
   private musicOn = false;
   enabled = true;
 
@@ -74,6 +75,44 @@ class Sound {
       };
       step();
     }
+  }
+
+  /** Les effets disponibles et l'endroit où ils sonnent. */
+  static readonly SFX = {
+    arrival: "le ciel s'ouvre",
+    next: "une nouvelle étoile s'allume",
+    star: "elle touche une étoile",
+    moon: "elle touche la Lune",
+    light: "une étoile s'illumine au final (x10)",
+    bloom: "le lapin apparaît",
+    draw: "le lapin se dessine",
+  } as const;
+
+  private loadSfx() {
+    const ctx = this.ctx;
+    if (!ctx) return;
+    for (const name of Object.keys(Sound.SFX)) {
+      if (this.buffers.has(name)) continue;
+      this.buffers.set(name, null);
+      fetch(import.meta.env.BASE_URL + "sfx/" + name + ".mp3")
+        .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject()))
+        .then((b) => new Promise<AudioBuffer>((ok, ko) => ctx.decodeAudioData(b, ok, ko)))
+        .then((buf) => this.buffers.set(name, buf))
+        .catch(() => { /* pas de fichier : ce moment reste silencieux */ });
+    }
+  }
+
+  /** Joue un effet doux, s'il existe. */
+  sfx(name: keyof typeof Sound.SFX, gain = 1) {
+    const ctx = this.ctx, buf = this.buffers.get(name);
+    if (!ctx || !buf || !this.enabled) return;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const g = ctx.createGain();
+    g.gain.value = 0.55 * gain;
+    src.connect(g);
+    g.connect(this.master);
+    src.start();
   }
 
   /** Baisse la musique pendant la lecture d'une carte, la remonte ensuite. */
@@ -138,6 +177,7 @@ class Sound {
       this.ctx = null;
     }
     if (!this.musicOn) this.startMusic();
+    this.loadSfx();
   }
 
   /** Nappe ambiante : quelques sinus désaccordés qui respirent lentement. */

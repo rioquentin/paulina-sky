@@ -62,7 +62,7 @@ export class Finale {
       tl.call(
         () => {
           fx.ring(sky.dir(s), now());
-          sound.chime(k + 1, 0.8);
+          sound.sfx("light", 0.7);
         },
         [],
         START + k * STEP,
@@ -71,13 +71,13 @@ export class Finale {
     const done = START + (rabbit.stars.length - 1) * STEP + 0.7;
 
     // 3. un éclat, puis le lapin se dessine à la lumière autour de ses étoiles
-    tl.call(() => sound.bloom(), [], done + 0.1);
+    tl.call(() => sound.sfx("bloom"), [], done + 0.1);
     tl.to(fx, { flash: 1, duration: 0.45, ease: "power2.out" }, done + 0.1);
     tl.to(fx, { flash: 0, duration: 2.4, ease: "sine.out" }, done + 0.55);
     tl.to(fx, { art: 1, duration: reduced ? 1.4 : 3.4, ease: "none" }, done + 0.35);
     tl.to(fx, { artFill: 1, duration: 2.6, ease: "sine.inOut" }, done + 1.9);
     tl.to(sky, { dim: 0.46, duration: 3, ease: "sine.inOut" }, done + 1.5);
-    [9, 11, 12, 13].forEach((s, i) => tl.call(() => sound.chime(s, 0.32), [], done + 0.7 + i * 0.55));
+    tl.call(() => sound.sfx("draw"), [], done + 0.5);
 
     // 4. il vit : il respire, cligne de l'œil, remue le nez, une oreille frétille
     const alive = done + 3.3;
