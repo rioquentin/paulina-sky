@@ -10,6 +10,14 @@ export class Card {
   onClose: (() => void) | null = null;
 
   constructor(private reduced: boolean) {
+    // la flèche ferme toujours la carte (et fait apparaître l'étoile suivante)
+    const next = this.el.querySelector(".card-next") as HTMLElement;
+    next.addEventListener("pointerdown", (e) => e.stopPropagation());
+    next.addEventListener("pointerup", (e) => e.stopPropagation());
+    next.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.close();
+    });
     let startY = 0, drag = 0, active = false;
     this.el.addEventListener("pointerdown", (e) => {
       if (!this.isOpen) return;
